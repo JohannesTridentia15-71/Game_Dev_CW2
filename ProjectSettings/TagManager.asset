@@ -44,17 +44,20 @@ TagManager:
   - name: Ground
     uniqueID: 2711044405
     locked: 0
-  - name: Buildings
-    uniqueID: 2938891623
-    locked: 0
-  - name: Decor
-    uniqueID: 2748244341
-    locked: 0
   - name: Entities
     uniqueID: 3561459449
     locked: 0
+  - name: Solid Decor
+    uniqueID: 2349395807
+    locked: 0
+  - name: Buildings
+    uniqueID: 2938891623
+    locked: 0
   - name: Border
     uniqueID: 3976174389
+    locked: 0
+  - name: Decor
+    uniqueID: 2748244341
     locked: 0
   m_RenderingLayers:
   - Default

@@ -21,7 +21,7 @@ public class ChickenMovement : MonoBehaviour
 
     private void Update()
     {
-        if (!canMove)
+        if (canMove == false)
         {
             moveInput = Vector2.zero;
             if (animator != null) animator.SetBool(IsMovingHash, false);
