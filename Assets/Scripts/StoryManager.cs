@@ -54,6 +54,7 @@ public class StoryManager : MonoBehaviour
     public int CurrentPride { get; private set; }
 
     [Header("Active Battle Context")]
+    [SerializeField] private AnimalType defaultOpponent = AnimalType.Sheep;
     public AnimalType CurrentOpponent { get; private set; }
     public Vector3 LastOverworldPosition { get; set; }
     public bool HasSavedOverworldPosition { get; set; }
@@ -75,6 +76,7 @@ public class StoryManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        CurrentOpponent = defaultOpponent;
         ResetStoryState();
     }
 

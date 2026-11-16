@@ -2,7 +2,18 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
 
+[System.Serializable]
+public class AnimalBattleProfile
+{
+    public AnimalType animal;
+    public string displayName;
+    public Sprite battleSprite;
+    public float maxHP = 100f;
+    public float maxRP = 100f;
+    public float rpGainPerSecond = 12f;
+}
 public class BattleController : MonoBehaviour
 {
     [Header("Scene & Object References")]
@@ -16,6 +27,9 @@ public class BattleController : MonoBehaviour
     [SerializeField] private float maxEnemyHP = 100f;
     [SerializeField] private float maxEnemyRP = 100f;
     [SerializeField] private float rpGainPerSecond = 12f;
+
+    [SerializeField] private SpriteRenderer opponentSpriteRenderer;
+    [SerializeField] private List<AnimalBattleProfile> animalProfiles = new List<AnimalBattleProfile>();
 
     [Header("Peck Settings")]
     [SerializeField] private float peckCooldown = 2f;
@@ -31,6 +45,8 @@ public class BattleController : MonoBehaviour
     [SerializeField] private TMP_Text peckButtonText;
     [SerializeField] private TMP_Text statusText;
 
+    [SerializeField] private TMP_Text opponentNameText;
+
     private float currentEnemyHP;
     private float currentEnemyRP;
     private float peckTimer;
@@ -42,7 +58,27 @@ public class BattleController : MonoBehaviour
         currentOpponent = StoryManager.Instance != null
             ? StoryManager.Instance.CurrentOpponent
             : AnimalType.Sheep;
+        
+        // Inside Start(), right after resolving currentOpponent:
+        string opponentLabel = currentOpponent.ToString();
+        foreach (var profile in animalProfiles)
+        {
+            if (profile.animal == currentOpponent)
+            {
+                maxEnemyHP = profile.maxHP;
+                maxEnemyRP = profile.maxRP;
+                rpGainPerSecond = profile.rpGainPerSecond;
+                if (!string.IsNullOrEmpty(profile.displayName))
+                    opponentLabel = profile.displayName;
+                if (opponentSpriteRenderer != null && profile.battleSprite != null)
+                    opponentSpriteRenderer.sprite = profile.battleSprite;
+                break;
+            }
+        }
 
+        if (opponentNameText != null) {
+            opponentNameText.text = opponentLabel;
+        }    
         currentEnemyHP = maxEnemyHP;
         currentEnemyRP = 0f;
         UpdateMeters();
@@ -52,7 +88,7 @@ public class BattleController : MonoBehaviour
         peckButton.onClick.AddListener(OnPeckClicked);
         eggHealth.OnEggCracked += HandleEggCracked;
 
-        EnterChoicePhase($"{currentOpponent} blocks your path! Fight or Run?");
+        EnterChoicePhase($"{opponentLabel} blocks your path! Fight or Run?");
     }
 
     private void OnDestroy()
