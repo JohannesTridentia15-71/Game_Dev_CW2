@@ -56,6 +56,6 @@ public class PlayerBattleHUD : MonoBehaviour
             : 3;
 
         if (livesMultiplierText != null)
-            livesMultiplierText.text = $"x {currentLives}";
+            livesMultiplierText.text = $"x{currentLives}";
     }
 }

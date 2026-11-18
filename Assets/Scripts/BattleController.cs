@@ -47,6 +47,12 @@ public class BattleController : MonoBehaviour
 
     [SerializeField] private TMP_Text opponentNameText;
 
+    [Header("Tutorial Popup")]
+    [SerializeField] private GameObject tutorialPanel;
+    [SerializeField] private Button confirmButton;
+    [SerializeField] private Button helpButton;
+    
+
     private float currentEnemyHP;
     private float currentEnemyRP;
     private float peckTimer;
@@ -89,6 +95,18 @@ public class BattleController : MonoBehaviour
         eggHealth.OnEggCracked += HandleEggCracked;
 
         EnterChoicePhase($"{opponentLabel} blocks your path! Fight or Run?");
+
+        if (confirmButton != null) {
+            confirmButton.onClick.AddListener(CloseTutorialPopup);
+        }
+        if (tutorialPanel != null) {
+            bool showAtStart = currentOpponent == AnimalType.Rooster;
+            tutorialPanel.SetActive(showAtStart);
+            Time.timeScale = showAtStart ? 0f : 1f;
+        }
+
+        if (helpButton != null)
+        helpButton.onClick.AddListener(OpenTutorialPopup);
     }
 
     private void OnDestroy()
@@ -191,6 +209,7 @@ public class BattleController : MonoBehaviour
     {
         // Per design: losing round HP resets RP and costs 1 life
         currentEnemyRP = 0f;
+        currentEnemyHP = maxEnemyHP;
         UpdateMeters();
 
         if (StoryManager.Instance != null)
@@ -242,4 +261,20 @@ public class BattleController : MonoBehaviour
         if (rpSlider != null) rpSlider.value = currentEnemyRP / maxEnemyRP;
         if (hpSlider != null) hpSlider.value = currentEnemyHP / maxEnemyHP;
     }
+
+    public void CloseTutorialPopup()
+    {
+        if (tutorialPanel != null) {
+            tutorialPanel.SetActive(false);
+            Time.timeScale = 1f;
+        }
+    }
+
+    public void OpenTutorialPopup()
+    {
+        if (tutorialPanel != null) {
+            tutorialPanel.SetActive(true);
+            Time.timeScale = 0f;
+        }
+}
 }
