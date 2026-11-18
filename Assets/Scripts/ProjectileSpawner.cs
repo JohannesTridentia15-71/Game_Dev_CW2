@@ -277,6 +277,7 @@ public class ProjectileSpawner : MonoBehaviour
             pattern.behaviorParamA,
             pattern.behaviorParamB
         );
+        bullet.SetArenaBounds(transform.position, boxHalfSize);
     }
 
     private Vector2 GetRandomEdgePosition()

@@ -30,6 +30,10 @@ public class Projectile : MonoBehaviour
     // Acceleration parameter
     private float acceleration = 4f;
 
+    private Vector2 arenaCenter;
+    private float maxDistanceFromCenter;
+    private bool hasEnteredArena;
+
     public void Initialize(
         Vector2 moveDirection,
         float moveSpeed,
@@ -100,6 +104,22 @@ public class Projectile : MonoBehaviour
                 transform.Translate(direction * speed * dt, Space.World);
                 break;
         }
+        if (maxDistanceFromCenter > 0f)
+        {
+            Vector2 offset = (Vector2)transform.position - arenaCenter;
+            bool insideBox = Mathf.Abs(offset.x) <= maxDistanceFromCenter
+                          && Mathf.Abs(offset.y) <= maxDistanceFromCenter;
+
+            if (insideBox)
+            {
+                hasEnteredArena = true;
+            }
+            else if (hasEnteredArena)
+            {
+                Destroy(gameObject);
+                return;
+            }
+        }
     }
 
     private void RotateTowardDirection()
@@ -119,5 +139,12 @@ public class Projectile : MonoBehaviour
             }
             Destroy(gameObject);
         }
+    }
+
+    public void SetArenaBounds(Vector2 center, float boxHalfSize, float exitMargin = 0.25f)
+    {
+        arenaCenter = center;
+        maxDistanceFromCenter = boxHalfSize + exitMargin;
+        hasEnteredArena = false;
     }
 }
