@@ -10,7 +10,7 @@ public enum ProjectileMovementType
 
 public class Projectile : MonoBehaviour
 {
-    [SerializeField] private float damage = 25f;
+    public float damage = 25f;
     [SerializeField] private float lifetime = 5f;
 
     private ProjectileMovementType movementType = ProjectileMovementType.Linear;
@@ -33,6 +33,7 @@ public class Projectile : MonoBehaviour
     private Vector2 arenaCenter;
     private float maxDistanceFromCenter;
     private bool hasEnteredArena;
+    private bool hasHit;
 
     public void Initialize(
         Vector2 moveDirection,
@@ -130,8 +131,11 @@ public class Projectile : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        if (hasHit) return;
+
         if (other.CompareTag("Player"))
         {
+            hasHit = true;
             EggHealth eggHealth = other.GetComponent<EggHealth>();
             if (eggHealth != null)
             {

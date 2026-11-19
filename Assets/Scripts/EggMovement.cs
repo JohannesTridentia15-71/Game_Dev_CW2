@@ -3,7 +3,7 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public class EggMovement : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 6f;
+    public float moveSpeed = 6f;
 
     public bool canMove = false;
     private Rigidbody2D rb;

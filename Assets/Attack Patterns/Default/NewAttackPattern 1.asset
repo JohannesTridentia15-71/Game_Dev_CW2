@@ -15,9 +15,9 @@ MonoBehaviour:
   shape: 0
   projectileOverride: {fileID: 0}
   bulletCount: 5
-  bulletSpeed: 4.5
-  duration: 2
-  burstInterval: 1.1
+  bulletSpeed: 7
+  duration: 1
+  burstInterval: 0.5
   angleParameter: 45
   safeGapWidth: 1.35
   movementType: 1

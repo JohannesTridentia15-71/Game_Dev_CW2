@@ -135,6 +135,7 @@ public class StoryManager : MonoBehaviour
 
         animalStates[animal] = EncounterOutcome.Befriended;
         unlockedAbilities.Add(animal);
+        Debug.Log($"[StoryManager] Befriended {animal}. Total unlocked: {unlockedAbilities.Count}");
 
         OnStatsChanged?.Invoke();
         OnAnimalResolved?.Invoke(animal, EncounterOutcome.Befriended);
