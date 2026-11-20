@@ -64,8 +64,6 @@ public class AbilityManager : MonoBehaviour
     private float gallopSpeedTimer;
     private bool gallopPeckEmpowered;
 
-    private float baseEggSpeed;
-
     public bool IsPackFrenzyActive => packFrenzyTimer > 0f;
     public bool IsTruffleCharmActive => truffleCharmTimer > 0f;
     public bool HasGallopPeckEmpowered => gallopPeckEmpowered;
@@ -76,9 +74,6 @@ public class AbilityManager : MonoBehaviour
 
     private void Start()
     {
-        if (eggMovement != null)
-            baseEggSpeed = eggMovement.moveSpeed;
-
         RefreshUnlockedSlots();
     }
 
@@ -111,8 +106,8 @@ public class AbilityManager : MonoBehaviour
         if (woolBarrierVisual != null)
             woolBarrierVisual.SetActive(false);
 
-        if (eggMovement != null && baseEggSpeed > 0f)
-            eggMovement.moveSpeed = baseEggSpeed;
+        if (eggMovement != null)
+            eggMovement.SetSpeedMultiplier(1f);
 
         foreach (var slot in abilitySlots)
             UpdateSlotVisual(slot);
@@ -148,7 +143,7 @@ public class AbilityManager : MonoBehaviour
         {
             gallopSpeedTimer -= Time.deltaTime;
             if (gallopSpeedTimer <= 0f && eggMovement != null)
-                eggMovement.moveSpeed = baseEggSpeed;
+                eggMovement.SetSpeedMultiplier(1f);
         }
 
         // 2. Tick slot cooldowns & check hotkeys
@@ -203,7 +198,7 @@ public class AbilityManager : MonoBehaviour
                 gallopSpeedTimer = gallopSpeedDuration;
                 gallopPeckEmpowered = true;
                 if (eggMovement != null)
-                    eggMovement.moveSpeed = baseEggSpeed * gallopSpeedMultiplier;
+                    eggMovement.SetSpeedMultiplier(gallopSpeedMultiplier);
                 break;
         }
 

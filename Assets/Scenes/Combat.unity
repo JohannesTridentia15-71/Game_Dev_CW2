@@ -2915,6 +2915,7 @@ GameObject:
   - component: {fileID: 792714792}
   - component: {fileID: 792714793}
   - component: {fileID: 792714794}
+  - component: {fileID: 792714795}
   m_Layer: 0
   m_Name: Egg
   m_TagString: Player
@@ -3092,6 +3093,22 @@ MonoBehaviour:
   eggSpriteRenderer: {fileID: 792714789}
   playerHPSlider: {fileID: 1115381187}
   playerHPText: {fileID: 759166121}
+--- !u!114 &792714795
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 792714788}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dfc71c3d513ec4a32a5980c22af9f818, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PrideEffectApplier
+  scaleIncreasePerPride: 0.12
+  speedPenaltyPerPride: 0.07
+  minSpeedMultiplier: 0.5
+  eggMovement: {fileID: 792714792}
 --- !u!1 &795290589
 GameObject:
   m_ObjectHideFlags: 0
@@ -3428,13 +3445,13 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 16
-  m_fontSizeBase: 16
+  m_fontSize: 20
+  m_fontSizeBase: 20
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 32
+  m_fontStyle: 0
   m_HorizontalAlignment: 1
   m_VerticalAlignment: 256
   m_textAlignment: 65535
@@ -3467,7 +3484,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: -163.20575, y: -223.04788, z: -155.04541, w: 0}
+  m_margin: {x: -163.20575, y: -223.04788, z: -155.04541, w: -50.990246}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -6574,7 +6591,7 @@ MonoBehaviour:
   projectileSpawner: {fileID: 1280286020}
   abilityManager: {fileID: 1114841962}
   eggSpawnPoint: {fileID: 1056459555}
-  overworldSceneName: FarmOverworld
+  overworldSceneName: victorsample
   maxEnemyHP: 100
   maxEnemyRP: 100
   rpGainPerSecond: 12
@@ -6653,6 +6670,7 @@ MonoBehaviour:
   defaultPeckCooldown: 2
   peckHPDamage: 20
   peckRPPenalty: 20
+  peckDamageBonusPerPride: 0.12
   rpSlider: {fileID: 266131257}
   hpSlider: {fileID: 357168986}
   fightButton: {fileID: 1278755438}
@@ -7325,7 +7343,7 @@ MonoBehaviour:
   startingLives: 4
   maxLives: 5
   maxPride: 5
-  defaultOpponent: 1
+  defaultOpponent: 0
 --- !u!4 &1788329040
 Transform:
   m_ObjectHideFlags: 0

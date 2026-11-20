@@ -43,6 +43,7 @@ public class BattleController : MonoBehaviour
     [SerializeField] private float defaultPeckCooldown = 2f;
     [SerializeField] private float peckHPDamage = 25f;
     [SerializeField] private float peckRPPenalty = 20f;
+    [SerializeField] private float peckDamageBonusPerPride = 0.12f; // +12% Peck damage per Pride
 
     [Header("UI References")]
     [SerializeField] private Slider rpSlider;
@@ -65,6 +66,7 @@ public class BattleController : MonoBehaviour
     [SerializeField] private GameObject outcomeOverlay;
     [SerializeField] private TMP_Text outcomeText;
     [SerializeField] private Button returnButton;
+    [SerializeField] private string gameOverSceneName = "GameOver";
 
     private float currentEnemyHP;
     private float currentEnemyRP;
@@ -247,9 +249,11 @@ public class BattleController : MonoBehaviour
 
         float damageMult = abilityManager != null ? abilityManager.ConsumePeckDamageMultiplier() : 1f;
         float cooldownMult = abilityManager != null ? abilityManager.PackFrenzyCooldownMultiplier : 1f;
+        int pride = StoryManager.Instance != null ? StoryManager.Instance.CurrentPride : 0;
+        float prideDamageMult = 1f + (pride * peckDamageBonusPerPride);
 
         // Attacking lowers HP, but also lowers Respect (RP)
-        currentEnemyHP = Mathf.Max(0f, currentEnemyHP - peckHPDamage * damageMult);
+        currentEnemyHP = Mathf.Max(0f, currentEnemyHP - peckHPDamage * damageMult * prideDamageMult);
         currentEnemyRP = Mathf.Max(0f, currentEnemyRP - peckRPPenalty);
         peckTimer = activePeckCooldown * cooldownMult;
         UpdateMeters();
@@ -272,9 +276,11 @@ public class BattleController : MonoBehaviour
             StoryManager.Instance.ResolvePlayerLostBattle(currentOpponent);
             if (currentOpponent != AnimalType.Rooster && StoryManager.Instance.CurrentLives <= 0)
             {
-                EnterChoicePhase("Game Over! You ran out of lives.");
-                fightButton.gameObject.SetActive(false);
-                ShowOutcome("YOUR EGG CRACKED!\nOUT OF LIVES...", false);
+                Time.timeScale = 1f;
+                if (Application.CanStreamedLevelBeLoaded(gameOverSceneName))
+                    SceneManager.LoadScene(gameOverSceneName);
+                else
+                    Debug.LogWarning($"Game Over! Add '{gameOverSceneName}' to Build Settings.");
                 return;
             }
         }
@@ -300,7 +306,14 @@ public class BattleController : MonoBehaviour
         runButton.gameObject.SetActive(false);
 
         if (StoryManager.Instance != null)
+        {
             StoryManager.Instance.ResolveDefeatOpponent(currentOpponent);
+            if (currentOpponent != AnimalType.Rooster && currentOpponent != AnimalType.Eagle)
+            {
+                StoryManager.Instance.PendingOverworldThought =
+                    BuildPostFightReflection(currentOpponent, EncounterOutcome.Defeated);
+            }
+        }
 
         ShowOutcome($"YOU DEFEATED {opponentLabel.ToUpper()}!\n(+HEALTH, +PRIDE)", true);
     }
@@ -316,13 +329,61 @@ public class BattleController : MonoBehaviour
             && StoryManager.Instance.HasAbilityFrom(currentOpponent);
 
         if (StoryManager.Instance != null)
+        {
             StoryManager.Instance.ResolveBefriendOpponent(currentOpponent);
+            if (currentOpponent != AnimalType.Rooster && currentOpponent != AnimalType.Eagle)
+            {
+                StoryManager.Instance.PendingOverworldThought =
+                    BuildPostFightReflection(currentOpponent, EncounterOutcome.Befriended);
+            }
+        }
         
         if (abilityManager != null)
             abilityManager.RefreshUnlockedSlots();
 
         string unlockDetails = GetAbilityUnlockSummary(currentOpponent, wasAlreadyUnlocked);
         ShowOutcome($"YOU BEFRIENDED {opponentLabel.ToUpper()}!\n{unlockDetails}", true);
+    }
+
+    private string[] BuildPostFightReflection(AnimalType animal, EncounterOutcome outcome)
+    {
+        if (outcome == EncounterOutcome.Defeated)
+        {
+            PrideTier tier = StoryManager.Instance != null
+                ? StoryManager.Instance.GetPrideTier()
+                : PrideTier.Low;
+
+            return tier switch
+            {
+                PrideTier.Low => new[]
+                {
+                    "Pride swells in your chest. You feel bigger and stronger, though your steps feel a little slower."
+                },
+                PrideTier.Medium => new[]
+                {
+                    "You puff out your feathers. You hit harder and can take more hits, but you're noticeably slower."
+                },
+                _ => new[]
+                {
+                    "You tower over the farm, immensely strong and hard to crack, yet heavy and sluggish on your feet."
+                }
+            };
+        }
+
+        string abilityName = animal switch
+        {
+            AnimalType.Sheep => "Wool Barrier",
+            AnimalType.Cow => "Fresh Milk",
+            AnimalType.Dog => "Pack Frenzy",
+            AnimalType.Pig => "Truffle Charm",
+            AnimalType.Horse => "Gallop Dash",
+            _ => "a new bond"
+        };
+
+        return new[]
+        {
+            $"{opponentLabel} stands by you now. Your steps stay light and nimble, and you gained {abilityName}!"
+        };
     }
 
     private string GetAbilityUnlockSummary(AnimalType animal, bool wasAlreadyUnlocked)

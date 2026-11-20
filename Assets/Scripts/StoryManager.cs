@@ -65,7 +65,7 @@ public class StoryManager : MonoBehaviour
     public event Action OnStatsChanged;
     public event Action<AnimalType, EncounterOutcome> OnAnimalResolved;
     public event Action<GameEnding> OnGameEnded;
-
+    public string[] PendingOverworldThought { get; set; }
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -94,6 +94,7 @@ public class StoryManager : MonoBehaviour
         }
 
         OnStatsChanged?.Invoke();
+        PendingOverworldThought = null;
     }
 
     // --- Overworld -> Battle Setup ---
@@ -143,14 +144,6 @@ public class StoryManager : MonoBehaviour
 
     public void ResolvePlayerLostBattle(AnimalType animal)
     {
-        if (animal == AnimalType.Eagle)
-        {
-            CurrentLives = 0;
-            OnStatsChanged?.Invoke();
-            OnGameEnded?.Invoke(GameEnding.GameOverLostFight);
-            return;
-        }
-
         // First tutorial fight: treat loss as getting kicked out into Madam Henriette's route
         if (animal == AnimalType.Rooster)
         {

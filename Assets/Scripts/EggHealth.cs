@@ -9,6 +9,9 @@ public class EggHealth : MonoBehaviour
     [SerializeField] private float maxHP = 100f;
     [SerializeField] private float hitInvulnerabilityDuration = 0.6f;
 
+    [Header("Pride Scaling")]
+    [SerializeField] private float bonusMaxHPPerPride = 25f; // At 5 Pride -> 175 Max HP
+
     [Header("References")]
     [SerializeField] private AbilityManager abilityManager;
     [SerializeField] private SpriteRenderer eggSpriteRenderer;
@@ -20,6 +23,7 @@ public class EggHealth : MonoBehaviour
     public event Action OnEggCracked;
     public event Action<float, float> OnHPChanged;
 
+    private float baseMaxHP;
     private float currentHP;
     private float invulnerabilityTimer;
     private Color baseSpriteColor = Color.white;
@@ -29,6 +33,8 @@ public class EggHealth : MonoBehaviour
 
     private void Awake()
     {
+        baseMaxHP = maxHP;
+
         if (eggSpriteRenderer == null)
             eggSpriteRenderer = GetComponent<SpriteRenderer>();
 
@@ -38,10 +44,53 @@ public class EggHealth : MonoBehaviour
         ResetHP();
     }
 
+    private void OnEnable()
+    {
+        if (StoryManager.Instance != null)
+            StoryManager.Instance.OnStatsChanged += HandleStatsChanged;
+    }
+
     private void Start()
-{
-    OnHPChanged?.Invoke(currentHP, maxHP);
-}
+    {
+        if (StoryManager.Instance != null)
+        {
+            StoryManager.Instance.OnStatsChanged -= HandleStatsChanged;
+            StoryManager.Instance.OnStatsChanged += HandleStatsChanged;
+        }
+
+        ApplyPrideMaxHP(refillToFull: true);
+    }
+
+    private void OnDisable()
+    {
+        if (StoryManager.Instance != null)
+            StoryManager.Instance.OnStatsChanged -= HandleStatsChanged;
+    }
+
+    private void HandleStatsChanged()
+    {
+        ApplyPrideMaxHP(refillToFull: false);
+    }
+
+    public void ApplyPrideMaxHP(bool refillToFull)
+    {
+        int pride = StoryManager.Instance != null ? StoryManager.Instance.CurrentPride : 0;
+        float previousMax = maxHP;
+        maxHP = baseMaxHP + (pride * bonusMaxHPPerPride);
+
+        if (refillToFull)
+        {
+            currentHP = maxHP;
+        }
+        else if (maxHP > previousMax)
+        {
+            currentHP += (maxHP - previousMax);
+        }
+
+        currentHP = Mathf.Clamp(currentHP, 0f, maxHP);
+        UpdateHealthUI();
+    }
+
     private void Update()
     {
         if (invulnerabilityTimer > 0f)
@@ -63,11 +112,10 @@ public class EggHealth : MonoBehaviour
 
     public void ResetHP()
     {
-        currentHP = maxHP;
+        ApplyPrideMaxHP(refillToFull: true);
         invulnerabilityTimer = 0f;
         if (eggSpriteRenderer != null)
             eggSpriteRenderer.color = baseSpriteColor;
-        UpdateHealthUI();
     }
 
     public void Heal(float amount)
@@ -115,5 +163,7 @@ public class EggHealth : MonoBehaviour
         {
             playerHPText.text = $"{Mathf.CeilToInt(currentHP)} / {Mathf.CeilToInt(maxHP)}";
         }
+
+        OnHPChanged?.Invoke(currentHP, maxHP);
     }
 }
