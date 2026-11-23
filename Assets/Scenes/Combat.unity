@@ -3038,6 +3038,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   moveSpeed: 6
+  scaleIncreasePerPride: 0.12
+  speedPenaltyPerPride: 0.07
+  minSpeedMultiplier: 0.5
   canMove: 0
 --- !u!58 &792714793
 CircleCollider2D:
@@ -3089,6 +3092,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   maxHP: 100
   hitInvulnerabilityDuration: 0.6
+  bonusMaxHPPerPride: 25
   abilityManager: {fileID: 1114841962}
   eggSpriteRenderer: {fileID: 792714789}
   playerHPSlider: {fileID: 1115381187}
@@ -5423,9 +5427,13 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 7db0cc4afafc24ae9b895885584fb01a, type: 2}
     - {fileID: 11400000, guid: 8062f5f5e8a1e4259bbb718423bfb51d, type: 2}
   - animal: 1
-    patterns: []
+    patterns:
+    - {fileID: 11400000, guid: b77245f0bd6e04c5794963dedd10445c, type: 2}
+    - {fileID: 11400000, guid: 22a6e10458e3e455ab3f6fbd0984ffb0, type: 2}
   - animal: 2
-    patterns: []
+    patterns:
+    - {fileID: 11400000, guid: afab830548a88428ab9ca226e46d261f, type: 2}
+    - {fileID: 11400000, guid: a16d1d47ac2974d5a8282c7b0c0b8d48, type: 2}
   - animal: 3
     patterns: []
   - animal: 4
@@ -6603,7 +6611,7 @@ MonoBehaviour:
     maxHP: 100
     maxRP: 100
     rpGainPerSecond: 4
-    peckCooldown: 4
+    peckCooldown: 5
     unlockedAbilityName: 
     abilityHotkeyLabel: 
     abilityDescription: 
@@ -6612,18 +6620,18 @@ MonoBehaviour:
     battleSprite: {fileID: 6271399085124507442, guid: 16b86ca95fccaac46ad95c578cd8249a, type: 3}
     maxHP: 100
     maxRP: 100
-    rpGainPerSecond: 25
+    rpGainPerSecond: 4
     peckCooldown: 2
     unlockedAbilityName: 
     abilityHotkeyLabel: 
     abilityDescription: 
   - animal: 2
-    displayName: Rooster
+    displayName: Moogaret Thatcher
     battleSprite: {fileID: 1315129547176965255, guid: 9be1d7b346ece60469560798934fbebe, type: 3}
     maxHP: 100
     maxRP: 100
-    rpGainPerSecond: 1
-    peckCooldown: 2
+    rpGainPerSecond: 5
+    peckCooldown: 3
     unlockedAbilityName: 
     abilityHotkeyLabel: 
     abilityDescription: 
@@ -6687,6 +6695,7 @@ MonoBehaviour:
   outcomeOverlay: {fileID: 1057289175}
   outcomeText: {fileID: 2106542342}
   returnButton: {fileID: 1816883510}
+  gameOverSceneName: GameOver
 --- !u!4 &1485084591
 Transform:
   m_ObjectHideFlags: 0
@@ -7343,7 +7352,18 @@ MonoBehaviour:
   startingLives: 4
   maxLives: 5
   maxPride: 5
-  defaultOpponent: 0
+  defaultOpponent: 2
+  relationshipRules:
+  - targetAnimal: 0
+    relatedAnimal: 0
+    triggerOutcome: 0
+    overworldDialogueLines: []
+    hpMultiplier: 0
+    rpMultiplier: 0
+    bulletSpeedMultiplier: 0
+    burstIntervalMultiplier: 0
+    customBattlePrompt: 
+    spriteTint: {r: 0, g: 0, b: 0, a: 0}
 --- !u!4 &1788329040
 Transform:
   m_ObjectHideFlags: 0
@@ -8494,7 +8514,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 43, y: -26}
+  m_AnchoredPosition: {x: 43, y: -131}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2106542342

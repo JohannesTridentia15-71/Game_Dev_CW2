@@ -5,13 +5,15 @@ public enum ProjectileMovementType
     Linear,
     SineWave,
     TimedHoming,
-    Accelerating
+    Accelerating,
+    Bouncing,
+    Boomerang
 }
 
 public class Projectile : MonoBehaviour
 {
     public float damage = 25f;
-    [SerializeField] private float lifetime = 5f;
+    [SerializeField] private float lifetime = 6f;
 
     private ProjectileMovementType movementType = ProjectileMovementType.Linear;
     private Vector2 direction;
@@ -30,7 +32,16 @@ public class Projectile : MonoBehaviour
     // Acceleration parameter
     private float acceleration = 4f;
 
+    // Bouncing parameters
+    private int remainingBounces = 2;
+
+    // Boomerang parameters
+    private float boomerangDeceleration = 5f;
+    private float boomerangInitialSpeed;
+    private bool boomerangReversed;
+
     private Vector2 arenaCenter;
+    private float arenaBoxHalfSize;
     private float maxDistanceFromCenter;
     private bool hasEnteredArena;
     private bool hasHit;
@@ -62,6 +73,16 @@ public class Projectile : MonoBehaviour
         else if (type == ProjectileMovementType.Accelerating)
         {
             if (paramA != 0f) acceleration = paramA;
+        }
+        else if (type == ProjectileMovementType.Bouncing)
+        {
+            remainingBounces = paramA > 0f ? Mathf.RoundToInt(paramA) : 2;
+        }
+        else if (type == ProjectileMovementType.Boomerang)
+        {
+            boomerangDeceleration = paramA > 0f ? paramA : 5f;
+            boomerangInitialSpeed = moveSpeed;
+            boomerangReversed = false;
         }
 
         RotateTowardDirection();
@@ -104,7 +125,32 @@ public class Projectile : MonoBehaviour
                 speed = Mathf.Max(0.5f, speed + acceleration * dt);
                 transform.Translate(direction * speed * dt, Space.World);
                 break;
+
+            case ProjectileMovementType.Bouncing:
+                transform.Translate(direction * speed * dt, Space.World);
+                HandleArenaBounce();
+                break;
+
+            case ProjectileMovementType.Boomerang:
+                if (!boomerangReversed)
+                {
+                    speed -= boomerangDeceleration * dt;
+                    if (speed <= 0f)
+                    {
+                        speed = 0f;
+                        boomerangReversed = true;
+                        direction = -direction;
+                        RotateTowardDirection();
+                    }
+                }
+                else
+                {
+                    speed = Mathf.Min(boomerangInitialSpeed * 1.2f, speed + boomerangDeceleration * dt);
+                }
+                transform.Translate(direction * speed * dt, Space.World);
+                break;
         }
+
         if (maxDistanceFromCenter > 0f)
         {
             Vector2 offset = (Vector2)transform.position - arenaCenter;
@@ -115,11 +161,53 @@ public class Projectile : MonoBehaviour
             {
                 hasEnteredArena = true;
             }
-            else if (hasEnteredArena)
+            else if (hasEnteredArena && (movementType != ProjectileMovementType.Bouncing || remainingBounces <= 0))
             {
                 Destroy(gameObject);
                 return;
             }
+        }
+    }
+
+    private void HandleArenaBounce()
+    {
+        if (arenaBoxHalfSize <= 0f || remainingBounces <= 0) return;
+
+        Vector2 pos = transform.position;
+        Vector2 offset = pos - arenaCenter;
+        bool bounced = false;
+
+        if (offset.x > arenaBoxHalfSize && direction.x > 0f)
+        {
+            pos.x = arenaCenter.x + arenaBoxHalfSize;
+            direction.x = -direction.x;
+            bounced = true;
+        }
+        else if (offset.x < -arenaBoxHalfSize && direction.x < 0f)
+        {
+            pos.x = arenaCenter.x - arenaBoxHalfSize;
+            direction.x = -direction.x;
+            bounced = true;
+        }
+
+        if (offset.y > arenaBoxHalfSize && direction.y > 0f)
+        {
+            pos.y = arenaCenter.y + arenaBoxHalfSize;
+            direction.y = -direction.y;
+            bounced = true;
+        }
+        else if (offset.y < -arenaBoxHalfSize && direction.y < 0f)
+        {
+            pos.y = arenaCenter.y - arenaBoxHalfSize;
+            direction.y = -direction.y;
+            bounced = true;
+        }
+
+        if (bounced)
+        {
+            remainingBounces--;
+            transform.position = pos;
+            RotateTowardDirection();
         }
     }
 
@@ -148,6 +236,7 @@ public class Projectile : MonoBehaviour
     public void SetArenaBounds(Vector2 center, float boxHalfSize, float exitMargin = 0.25f)
     {
         arenaCenter = center;
+        arenaBoxHalfSize = boxHalfSize;
         maxDistanceFromCenter = boxHalfSize + exitMargin;
         hasEnteredArena = false;
     }

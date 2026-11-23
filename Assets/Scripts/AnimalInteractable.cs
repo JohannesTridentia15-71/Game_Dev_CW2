@@ -163,6 +163,16 @@ public class AnimalInteractable : MonoBehaviour
         if (outcome == EncounterOutcome.Defeated)
             return gravestoneLines;
 
+        // Check if a counterpart relationship rule overrides pre-encounter dialogue (e.g., Cow reacting to Sheep)
+        if (StoryManager.Instance != null)
+        {
+            BattleRelationshipModifiers relMods = StoryManager.Instance.GetBattleModifiersFor(animalType);
+            if (relMods.hasActiveRule && relMods.overworldDialogueLines != null && relMods.overworldDialogueLines.Length > 0)
+            {
+                return relMods.overworldDialogueLines;
+            }
+        }
+
         PrideTier tier = StoryManager.Instance != null
             ? StoryManager.Instance.GetPrideTier()
             : PrideTier.Low;

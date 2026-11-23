@@ -66,6 +66,9 @@ public class StoryManager : MonoBehaviour
     public event Action<AnimalType, EncounterOutcome> OnAnimalResolved;
     public event Action<GameEnding> OnGameEnded;
     public string[] PendingOverworldThought { get; set; }
+
+    [Header("Animal Relationships")]
+    [SerializeField] private List<AnimalRelationshipRule> relationshipRules = new List<AnimalRelationshipRule>();
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -209,5 +212,41 @@ public class StoryManager : MonoBehaviour
         }
 
         OnGameEnded?.Invoke(ending);
+    }
+
+    public BattleRelationshipModifiers GetBattleModifiersFor(AnimalType targetAnimal)
+    {
+        BattleRelationshipModifiers mods = BattleRelationshipModifiers.Default;
+
+        for (int i = 0; i < relationshipRules.Count; i++)
+        {
+            AnimalRelationshipRule rule = relationshipRules[i];
+            if (rule.targetAnimal != targetAnimal) continue;
+
+            if (GetAnimalState(rule.relatedAnimal) == rule.triggerOutcome)
+            {
+                mods.hasActiveRule = true;
+                if (rule.isEnraged)
+                    mods.isEnraged = true;
+
+                mods.hpMultiplier *= rule.hpMultiplier;
+                mods.rpMultiplier *= rule.rpMultiplier;
+                mods.bulletSpeedMultiplier *= rule.bulletSpeedMultiplier;
+                mods.burstIntervalMultiplier *= rule.burstIntervalMultiplier;
+
+                Color safeTint = rule.spriteTint;
+                if (safeTint.a <= 0.01f)
+                    safeTint = new Color(1f, 0.72f, 0.72f, 1f); // Safeguard against Unity's 0-alpha default
+                mods.spriteTint = safeTint;
+
+                if (!string.IsNullOrWhiteSpace(rule.customBattlePrompt))
+                    mods.customBattlePrompt = rule.customBattlePrompt;
+
+                if (rule.overworldDialogueLines != null && rule.overworldDialogueLines.Length > 0)
+                    mods.overworldDialogueLines = rule.overworldDialogueLines;
+            }
+        }
+
+        return mods;
     }
 }

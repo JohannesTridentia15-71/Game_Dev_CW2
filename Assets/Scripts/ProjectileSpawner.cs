@@ -95,11 +95,18 @@ public class ProjectileSpawner : MonoBehaviour
     private IEnumerator ExecutePattern(AttackPatternSO pattern)
     {
         float waveElapsed = 0f;
-        float spiralAngle = Random.Range(0f, 360f);
+        float ringAngle = Random.Range(0f, 360f);
+
+        BattleRelationshipModifiers relMods = StoryManager.Instance != null
+            ? StoryManager.Instance.GetBattleModifiersFor(StoryManager.Instance.CurrentOpponent)
+            : BattleRelationshipModifiers.Default;
+
+        float speedMult = relMods.bulletSpeedMultiplier;
+        float scaledBurstInterval = Mathf.Max(0.1f, pattern.burstInterval * relMods.burstIntervalMultiplier);
 
         while (isSpawning && waveElapsed < pattern.duration)
         {
-            List<PlannedShot> shots = BuildVolleyShots(pattern, ref spiralAngle);
+            List<PlannedShot> shots = BuildVolleyShots(pattern, ref ringAngle);
 
             if (pattern.telegraphDuration > 0f && telegraphMarkerPrefab != null)
             {
@@ -113,15 +120,15 @@ public class ProjectileSpawner : MonoBehaviour
 
             foreach (var shot in shots)
             {
-                CreateBullet(pattern, shot.position, shot.direction);
+                CreateBullet(pattern, shot.position, shot.direction, speedMult);
             }
 
-            yield return new WaitForSeconds(pattern.burstInterval);
-            waveElapsed += pattern.burstInterval;
+            yield return new WaitForSeconds(scaledBurstInterval);
+            waveElapsed += scaledBurstInterval;
         }
     }
 
-    private List<PlannedShot> BuildVolleyShots(AttackPatternSO pattern, ref float spiralAngle)
+    private List<PlannedShot> BuildVolleyShots(AttackPatternSO pattern, ref float ringAngle)
     {
         var shots = new List<PlannedShot>();
 
@@ -151,7 +158,7 @@ public class ProjectileSpawner : MonoBehaviour
 
                 for (int i = 0; i < ringCount; i++)
                 {
-                    float angle = spiralAngle + (ringStep * i);
+                    float angle = ringAngle + (ringStep * i);
                     Vector2 dir = AngleToVector(angle);
                     shots.Add(new PlannedShot
                     {
@@ -159,49 +166,62 @@ public class ProjectileSpawner : MonoBehaviour
                         direction = dir
                     });
                 }
-                spiralAngle += 18f;
+                ringAngle += 18f;
                 break;
 
             case PatternShape.WallWithGap:
                 bool horizontalWall = Random.value > 0.5f;
                 float sign = Random.value > 0.5f ? 1f : -1f;
                 float gapCenter = Random.Range(-boxHalfSize + pattern.safeGapWidth, boxHalfSize - pattern.safeGapWidth);
-                float halfGap = pattern.safeGapWidth * 0.5f;
-                int wallSteps = Mathf.Max(4, pattern.bulletCount);
-                float span = boxHalfSize * 2f;
-
-                for (int i = 0; i <= wallSteps; i++)
-                {
-                    float offset = -boxHalfSize + (span * i / wallSteps);
-                    if (Mathf.Abs(offset - gapCenter) < halfGap) continue;
-
-                    Vector2 localPos = horizontalWall
-                        ? new Vector2(offset, sign * boxHalfSize)
-                        : new Vector2(sign * boxHalfSize, offset);
-
-                    Vector2 moveDir = horizontalWall
-                        ? new Vector2(0f, -sign)
-                        : new Vector2(-sign, 0f);
-
-                    shots.Add(new PlannedShot
-                    {
-                        position = (Vector2)transform.position + localPos,
-                        direction = moveDir
-                    });
-                }
+                AddWallShots(shots, horizontalWall, sign, gapCenter, pattern.safeGapWidth, pattern.bulletCount);
                 break;
 
-            case PatternShape.SpiralStream:
-                shots.Add(new PlannedShot
+            case PatternShape.StampedeCross:
+                bool horizontalPair = Random.value > 0.5f;
+                float minGap = -boxHalfSize + pattern.safeGapWidth;
+                float maxGap = boxHalfSize - pattern.safeGapWidth;
+
+                // Pick two offset gaps so the player weaves through one opening, then shifts for the second
+                float gapA = Random.Range(minGap, 0f);
+                float gapB = Random.Range(0f, maxGap);
+                if (Random.value > 0.5f)
                 {
-                    position = transform.position,
-                    direction = AngleToVector(spiralAngle)
-                });
-                spiralAngle += pattern.angleParameter;
+                    (gapA, gapB) = (gapB, gapA);
+                }
+
+                AddWallShots(shots, horizontalPair, 1f, gapA, pattern.safeGapWidth, pattern.bulletCount);
+                AddWallShots(shots, horizontalPair, -1f, gapB, pattern.safeGapWidth, pattern.bulletCount);
                 break;
         }
 
         return shots;
+    }
+
+    private void AddWallShots(List<PlannedShot> shots, bool horizontalWall, float sign, float gapCenter, float safeGapWidth, int bulletCount)
+    {
+        float halfGap = safeGapWidth * 0.5f;
+        int wallSteps = Mathf.Max(4, bulletCount);
+        float span = boxHalfSize * 2f;
+
+        for (int i = 0; i <= wallSteps; i++)
+        {
+            float offset = -boxHalfSize + (span * i / wallSteps);
+            if (Mathf.Abs(offset - gapCenter) < halfGap) continue;
+
+            Vector2 localPos = horizontalWall
+                ? new Vector2(offset, sign * boxHalfSize)
+                : new Vector2(sign * boxHalfSize, offset);
+
+            Vector2 moveDir = horizontalWall
+                ? new Vector2(0f, -sign)
+                : new Vector2(-sign, 0f);
+
+            shots.Add(new PlannedShot
+            {
+                position = (Vector2)transform.position + localPos,
+                direction = moveDir
+            });
+        }
     }
 
     private void SpawnTelegraphMarkers(PatternShape shape, List<PlannedShot> shots)
@@ -209,45 +229,56 @@ public class ProjectileSpawner : MonoBehaviour
         ClearActiveMarkers();
         if (shots == null || shots.Count == 0 || telegraphMarkerPrefab == null) return;
 
-        Vector2 markerPos;
-        float markerAngle;
-
         switch (shape)
         {
             case PatternShape.AimedFan:
-                // Single marker at the edge origin pointing along the middle bullet
                 PlannedShot centerShot = shots[shots.Count / 2];
-                markerPos = centerShot.position;
-                markerAngle = Mathf.Atan2(centerShot.direction.y, centerShot.direction.x) * Mathf.Rad2Deg;
+                activeMarkers.Add(Instantiate(telegraphMarkerPrefab, centerShot.position, Quaternion.identity));
                 break;
 
             case PatternShape.RadialRing:
-                // Single marker at the arena center
-                markerPos = transform.position;
-                markerAngle = 0f;
+                activeMarkers.Add(Instantiate(telegraphMarkerPrefab, transform.position, Quaternion.identity));
                 break;
 
             case PatternShape.WallWithGap:
-                // Single marker centered on the spawning wall edge, pointing inward
                 Vector2 avgPos = Vector2.zero;
                 for (int i = 0; i < shots.Count; i++) avgPos += shots[i].position;
-                markerPos = avgPos / shots.Count;
-                Vector2 dir = shots[0].direction;
-                markerAngle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+                avgPos /= shots.Count;
+                activeMarkers.Add(Instantiate(telegraphMarkerPrefab, avgPos, Quaternion.identity));
+                break;
+
+            case PatternShape.StampedeCross:
+                // Spawn one marker on each of the two opposite walls
+                Vector2 sumPosA = Vector2.zero;
+                Vector2 sumPosB = Vector2.zero;
+                int countA = 0;
+                int countB = 0;
+                Vector2 firstDir = shots[0].direction;
+
+                for (int i = 0; i < shots.Count; i++)
+                {
+                    if (Vector2.Dot(shots[i].direction, firstDir) > 0f)
+                    {
+                        sumPosA += shots[i].position;
+                        countA++;
+                    }
+                    else
+                    {
+                        sumPosB += shots[i].position;
+                        countB++;
+                    }
+                }
+
+                if (countA > 0)
+                    activeMarkers.Add(Instantiate(telegraphMarkerPrefab, sumPosA / countA, Quaternion.identity));
+                if (countB > 0)
+                    activeMarkers.Add(Instantiate(telegraphMarkerPrefab, sumPosB / countB, Quaternion.identity));
                 break;
 
             default:
-                markerPos = shots[0].position;
-                markerAngle = Mathf.Atan2(shots[0].direction.y, shots[0].direction.x) * Mathf.Rad2Deg;
+                activeMarkers.Add(Instantiate(telegraphMarkerPrefab, shots[0].position, Quaternion.identity));
                 break;
         }
-
-        GameObject marker = Instantiate(
-            telegraphMarkerPrefab,
-            markerPos,
-            Quaternion.identity
-        );
-        activeMarkers.Add(marker);
     }
 
     private void ClearActiveMarkers()
@@ -260,7 +291,7 @@ public class ProjectileSpawner : MonoBehaviour
         activeMarkers.Clear();
     }
 
-    private void CreateBullet(AttackPatternSO pattern, Vector2 worldPos, Vector2 direction)
+    private void CreateBullet(AttackPatternSO pattern, Vector2 worldPos, Vector2 direction, float speedMult = 1f)
     {
         Projectile prefab = pattern.projectileOverride != null
             ? pattern.projectileOverride
@@ -271,7 +302,7 @@ public class ProjectileSpawner : MonoBehaviour
         Projectile bullet = Instantiate(prefab, worldPos, Quaternion.identity);
         bullet.Initialize(
             direction,
-            pattern.bulletSpeed,
+            pattern.bulletSpeed * speedMult,
             pattern.movementType,
             targetEgg,
             pattern.behaviorParamA,

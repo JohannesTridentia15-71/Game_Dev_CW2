@@ -104,6 +104,23 @@ public class BattleController : MonoBehaviour
             }
         }
 
+        // Apply any active relationship rules (e.g., Cow enraged if Sheep was defeated)
+        BattleRelationshipModifiers relMods = StoryManager.Instance != null
+            ? StoryManager.Instance.GetBattleModifiersFor(currentOpponent)
+            : BattleRelationshipModifiers.Default;
+
+        if (relMods.hasActiveRule)
+        {
+            maxEnemyHP = Mathf.Round(maxEnemyHP * relMods.hpMultiplier);
+            maxEnemyRP = Mathf.Round(maxEnemyRP * relMods.rpMultiplier);
+
+            if (relMods.isEnraged)
+                opponentLabel += " (Enraged)";
+
+            if (opponentSpriteRenderer != null)
+                opponentSpriteRenderer.color = relMods.spriteTint;
+        }
+
         if (opponentNameText != null)
             opponentNameText.text = opponentLabel;
 
@@ -137,7 +154,11 @@ public class BattleController : MonoBehaviour
             Time.timeScale = showAtStart ? 0f : 1f;
         }
 
-        EnterChoicePhase($"{opponentLabel} blocks your path! Fight or Run?");
+        string openingPrompt = (relMods.hasActiveRule && !string.IsNullOrWhiteSpace(relMods.customBattlePrompt))
+            ? relMods.customBattlePrompt
+            : $"{opponentLabel} blocks your path! Fight or Run?";
+
+        EnterChoicePhase(openingPrompt);
     }
 
     private void OnDestroy()
@@ -218,7 +239,7 @@ public class BattleController : MonoBehaviour
 
         if (abilityManager != null)
             abilityManager.ResetCombatBuffs();
-        
+
         float cooldownMult = abilityManager != null ? abilityManager.PackFrenzyCooldownMultiplier : 1f;
         peckTimer = activePeckCooldown * cooldownMult;
 
@@ -337,7 +358,7 @@ public class BattleController : MonoBehaviour
                     BuildPostFightReflection(currentOpponent, EncounterOutcome.Befriended);
             }
         }
-        
+
         if (abilityManager != null)
             abilityManager.RefreshUnlockedSlots();
 
