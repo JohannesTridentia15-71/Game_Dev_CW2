@@ -1,38 +1,35 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
-public class AnimalRelationshipRule
+public class AnimalRelationLink
 {
-    [Tooltip("The animal currently being interacted with or fought")]
-    public AnimalType targetAnimal;
+    public AnimalType animal;
 
-    [Tooltip("The counterpart animal whose outcome triggers this reaction")]
-    public AnimalType relatedAnimal;
+    [Tooltip("Name shown in auto-generated lines if custom lines are left blank (e.g., Mootilda)")]
+    public string displayName;
 
-    [Tooltip("Trigger when relatedAnimal was Defeated or Befriended")]
-    public EncounterOutcome triggerOutcome = EncounterOutcome.Defeated;
+    [Header("Custom Overworld Lines (Optional — auto-generates if empty)")]
+    [TextArea(2, 3)] public string[] onDefeatedLines;
+    [TextArea(2, 3)] public string[] onBefriendedLines;
+}
 
-    [Tooltip("If true, appends (Enraged) to the opponent's name in battle")]
-    public bool isEnraged = true;
+[System.Serializable]
+public class AnimalSocialNetwork
+{
+    public AnimalType animal;
 
-    [Header("Overworld Pre-Battle Dialogue")]
-    [Tooltip("Replaces the animal's normal pre-battle dialogue if non-empty")]
-    [TextArea(2, 4)] public string[] overworldDialogueLines;
+    [Tooltip("Animals this character likes (Defeating them lowers score; Befriending them raises score)")]
+    public List<AnimalRelationLink> friends = new List<AnimalRelationLink>();
 
-    [Header("Battle Modifiers")]
-    public float hpMultiplier = 1.25f;
-    public float rpMultiplier = 1.20f;
-    public float bulletSpeedMultiplier = 1.20f;
-    public float burstIntervalMultiplier = 0.80f;
-
-    [Header("Battle Presentation")]
-    [TextArea] public string customBattlePrompt = "Mootilda is furious about Molly! Fight or Run?";
-    public Color spriteTint = new Color(1f, 0.72f, 0.72f, 1f);
+    [Tooltip("Animals this character dislikes (Defeating them raises score; Befriending them lowers score)")]
+    public List<AnimalRelationLink> enemies = new List<AnimalRelationLink>();
 }
 
 public struct BattleRelationshipModifiers
 {
     public bool hasActiveRule;
+    public int sentimentScore; // < 0 = Hostile/Enraged, 0 = Neutral, > 0 = Friendly
     public bool isEnraged;
     public float hpMultiplier;
     public float rpMultiplier;
@@ -45,6 +42,7 @@ public struct BattleRelationshipModifiers
     public static BattleRelationshipModifiers Default => new BattleRelationshipModifiers
     {
         hasActiveRule = false,
+        sentimentScore = 0,
         isEnraged = false,
         hpMultiplier = 1f,
         rpMultiplier = 1f,

@@ -4,6 +4,8 @@ using UnityEngine.SceneManagement;
 public class AnimalInteractable : MonoBehaviour
 {
     [Header("Identity")]
+    [Tooltip("Enable for townsfolk/bystanders who never fight and don't map to a combatant's StoryManager state")]
+    [SerializeField] private bool isNeutralNPC = false;
     [SerializeField] private AnimalType animalType = AnimalType.Pig;
     [SerializeField] private string speakerName = "Truff";
 
@@ -14,8 +16,8 @@ public class AnimalInteractable : MonoBehaviour
     [SerializeField] private string gravestoneSpeakerName = "Gravestone";
     [SerializeField] private bool disableColliderWhenDefeated = false; // Keep false if you want players to inspect the gravestone
 
-    [Header("Pre-Encounter Dialogue by Pride Tier")]
-    [Tooltip("Pride 0-1 (Humble)")]
+    [Header("Pre-Encounter / Neutral Dialogue by Pride Tier")]
+    [Tooltip("Pride 0-1 (Humble) — also used as default dialogue for Neutral NPCs")]
     [TextArea(2, 4)]
     [SerializeField] private string[] humbleLines = new[]
     {
@@ -23,7 +25,7 @@ public class AnimalInteractable : MonoBehaviour
         "Care for a friendly spar in the pen?"
     };
 
-    [Tooltip("Pride 2-3 (Proud)")]
+    [Tooltip("Pride 2-3 (Proud) — optional for Neutral NPCs (falls back to Humble Lines if empty)")]
     [TextArea(2, 4)]
     [SerializeField] private string[] proudLines = new[]
     {
@@ -31,7 +33,7 @@ public class AnimalInteractable : MonoBehaviour
         "Think you're big enough to push me around too?"
     };
 
-    [Tooltip("Pride 4-5 (Arrogant)")]
+    [Tooltip("Pride 4-5 (Arrogant) — optional for Neutral NPCs (falls back to Humble Lines if empty)")]
     [TextArea(2, 4)]
     [SerializeField] private string[] arrogantLines = new[]
     {
@@ -39,7 +41,7 @@ public class AnimalInteractable : MonoBehaviour
         "Stay back—I won't go down without a fight!"
     };
 
-    [Header("Post-Encounter Dialogue")]
+    [Header("Post-Encounter Dialogue (Combatants Only)")]
     [TextArea(2, 4)]
     [SerializeField] private string[] befriendedLines = new[]
     {
@@ -74,7 +76,7 @@ public class AnimalInteractable : MonoBehaviour
 
     private void OnEnable()
     {
-        if (StoryManager.Instance != null)
+        if (!isNeutralNPC && StoryManager.Instance != null)
             StoryManager.Instance.OnAnimalResolved += HandleAnimalResolved;
     }
 
@@ -91,12 +93,19 @@ public class AnimalInteractable : MonoBehaviour
 
     private void HandleAnimalResolved(AnimalType resolvedAnimal, EncounterOutcome outcome)
     {
-        if (resolvedAnimal == animalType)
+        if (!isNeutralNPC && resolvedAnimal == animalType)
             RefreshVisualState();
     }
 
     public void RefreshVisualState()
     {
+        if (isNeutralNPC)
+        {
+            if (spriteRenderer != null && normalAnimalSprite != null)
+                spriteRenderer.sprite = normalAnimalSprite;
+            return;
+        }
+
         EncounterOutcome outcome = StoryManager.Instance != null
             ? StoryManager.Instance.GetAnimalState(animalType)
             : EncounterOutcome.Unvisited;
@@ -131,6 +140,14 @@ public class AnimalInteractable : MonoBehaviour
 
     private void TriggerInteraction()
     {
+        if (isNeutralNPC)
+        {
+            string[] neutralLines = GetPrideScaledDialogue();
+            if (dialogueBox != null)
+                dialogueBox.StartDialogue(speakerName, neutralLines);
+            return;
+        }
+
         EncounterOutcome outcome = StoryManager.Instance != null
             ? StoryManager.Instance.GetAnimalState(animalType)
             : EncounterOutcome.Unvisited;
@@ -173,16 +190,22 @@ public class AnimalInteractable : MonoBehaviour
             }
         }
 
+        return GetPrideScaledDialogue();
+    }
+
+    private string[] GetPrideScaledDialogue()
+    {
         PrideTier tier = StoryManager.Instance != null
             ? StoryManager.Instance.GetPrideTier()
             : PrideTier.Low;
 
-        return tier switch
-        {
-            PrideTier.Low => humbleLines,
-            PrideTier.Medium => proudLines,
-            _ => arrogantLines
-        };
+        if (tier == PrideTier.High && arrogantLines != null && arrogantLines.Length > 0)
+            return arrogantLines;
+
+        if (tier == PrideTier.Medium && proudLines != null && proudLines.Length > 0)
+            return proudLines;
+
+        return humbleLines;
     }
 
     private void BeginCombatEncounter()
