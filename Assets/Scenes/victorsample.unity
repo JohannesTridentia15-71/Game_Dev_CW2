@@ -2213,6 +2213,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 553a4ab16bd0d451db7ad78b72cec32a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnimalInteractable
+  isNeutralNPC: 0
   animalType: 5
   speakerName: Calvin Swine
   spriteRenderer: {fileID: 65837574}
@@ -2416,6 +2417,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 553a4ab16bd0d451db7ad78b72cec32a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnimalInteractable
+  isNeutralNPC: 0
   animalType: 1
   speakerName: Wooliam Shakespeare
   spriteRenderer: {fileID: 78005804}
@@ -2636,19 +2638,30 @@ MonoBehaviour:
   maxLives: 5
   maxPride: 5
   defaultOpponent: 1
-  relationshipRules:
-  - targetAnimal: 2
-    relatedAnimal: 1
-    triggerOutcome: 1
-    isEnraged: 1
-    overworldDialogueLines:
-    - YOU MURDERERRR
-    hpMultiplier: 1.25
-    rpMultiplier: 1.2
-    bulletSpeedMultiplier: 2
-    burstIntervalMultiplier: 0.8
-    customBattlePrompt: 
-    spriteTint: {r: 1, g: 0.051886797, b: 0.051886797, a: 1}
+  socialNetworks:
+  - animal: 2
+    friends:
+    - animal: 1
+      displayName: Wooliam
+      onDefeatedLines:
+      - YOU KILLED MY WOOLLY FRIEND
+      onBefriendedLines:
+      - you befriended wooliam
+    - animal: 0
+      displayName: Cluck Norris
+      onDefeatedLines:
+      - YOU KILLED CLUCK NORRIS
+      onBefriendedLines:
+      - you befriended cluck norris
+    enemies: []
+  hostileHpStep: 0.12
+  hostileRpStep: 0.1
+  hostileSpeedStep: 0.1
+  hostileIntervalStep: 0.08
+  friendlyRpStep: 0.08
+  friendlyHpStep: 0.05
+  enragedTint: {r: 1, g: 0.72, b: 0.72, a: 1}
+  friendlyTint: {r: 0.85, g: 1, b: 0.85, a: 1}
 --- !u!4 &106858217
 Transform:
   m_ObjectHideFlags: 0
@@ -18606,6 +18619,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 553a4ab16bd0d451db7ad78b72cec32a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnimalInteractable
+  isNeutralNPC: 0
   animalType: 3
   speakerName: Indiana Bones
   spriteRenderer: {fileID: 584173644}
@@ -21496,7 +21510,15 @@ MonoBehaviour:
   maxLives: 5
   maxPride: 5
   defaultOpponent: 1
-  relationshipRules: []
+  socialNetworks: []
+  hostileHpStep: 0.12
+  hostileRpStep: 0.1
+  hostileSpeedStep: 0.1
+  hostileIntervalStep: 0.08
+  friendlyRpStep: 0.08
+  friendlyHpStep: 0.05
+  enragedTint: {r: 1, g: 0.72, b: 0.72, a: 1}
+  friendlyTint: {r: 0.85, g: 1, b: 0.85, a: 1}
 --- !u!4 &1445553301
 Transform:
   m_ObjectHideFlags: 0
@@ -21617,6 +21639,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 553a4ab16bd0d451db7ad78b72cec32a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnimalInteractable
+  isNeutralNPC: 0
   animalType: 4
   speakerName: Al Capony
   spriteRenderer: {fileID: 1494417286}
@@ -24716,6 +24739,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 553a4ab16bd0d451db7ad78b72cec32a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnimalInteractable
+  isNeutralNPC: 0
   animalType: 6
   speakerName: Wingston Churchill
   spriteRenderer: {fileID: 1907258457}
@@ -25721,6 +25745,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 553a4ab16bd0d451db7ad78b72cec32a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnimalInteractable
+  isNeutralNPC: 0
   animalType: 2
   speakerName: Moogaret Thatcher
   spriteRenderer: {fileID: 1919105451}
@@ -25927,6 +25952,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 553a4ab16bd0d451db7ad78b72cec32a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnimalInteractable
+  isNeutralNPC: 0
   animalType: 0
   speakerName: Cluck Norris
   spriteRenderer: {fileID: 1934055198}

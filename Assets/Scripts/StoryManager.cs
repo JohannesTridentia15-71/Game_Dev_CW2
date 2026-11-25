@@ -67,8 +67,22 @@ public class StoryManager : MonoBehaviour
     public event Action<GameEnding> OnGameEnded;
     public string[] PendingOverworldThought { get; set; }
 
-    [Header("Animal Relationships")]
-    [SerializeField] private List<AnimalRelationshipRule> relationshipRules = new List<AnimalRelationshipRule>();
+    [Header("Animal Social Network & Counter Scaling")]
+    [SerializeField] private List<AnimalSocialNetwork> socialNetworks = new List<AnimalSocialNetwork>();
+
+    [Tooltip("Stat step per negative sentiment point (e.g. -2 score = +24% HP, +20% speed)")]
+    [SerializeField] private float hostileHpStep = 0.12f;
+    [SerializeField] private float hostileRpStep = 0.10f;
+    [SerializeField] private float hostileSpeedStep = 0.10f;
+    [SerializeField] private float hostileIntervalStep = 0.08f;
+
+    [Tooltip("Stat step per positive sentiment point (e.g. +2 score = -16% RP needed)")]
+    [SerializeField] private float friendlyRpStep = 0.08f;
+    [SerializeField] private float friendlyHpStep = 0.05f;
+
+    [SerializeField] private Color enragedTint = new Color(1f, 0.72f, 0.72f, 1f);
+    [SerializeField] private Color friendlyTint = new Color(0.85f, 1f, 0.85f, 1f);
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -214,39 +228,149 @@ public class StoryManager : MonoBehaviour
         OnGameEnded?.Invoke(ending);
     }
 
+    // --- Social Network Sentiment & Battle Scaling ---
+    public int GetSentimentScore(AnimalType targetAnimal)
+    {
+        AnimalSocialNetwork net = socialNetworks.Find(n => n.animal == targetAnimal);
+        if (net == null) return 0;
+
+        int score = 0;
+
+        for (int i = 0; i < net.friends.Count; i++)
+        {
+            EncounterOutcome state = GetAnimalState(net.friends[i].animal);
+            if (state == EncounterOutcome.Befriended) score += 1;
+            else if (state == EncounterOutcome.Defeated) score -= 1;
+        }
+
+        for (int i = 0; i < net.enemies.Count; i++)
+        {
+            EncounterOutcome state = GetAnimalState(net.enemies[i].animal);
+            if (state == EncounterOutcome.Defeated) score += 1;
+            else if (state == EncounterOutcome.Befriended) score -= 1;
+        }
+
+        return score;
+    }
+
     public BattleRelationshipModifiers GetBattleModifiersFor(AnimalType targetAnimal)
     {
         BattleRelationshipModifiers mods = BattleRelationshipModifiers.Default;
+        AnimalSocialNetwork net = socialNetworks.Find(n => n.animal == targetAnimal);
+        if (net == null) return mods;
 
-        for (int i = 0; i < relationshipRules.Count; i++)
+        int score = 0;
+        var gatheredDialogue = new List<string>();
+        var angerReasons = new List<string>();
+        var happyReasons = new List<string>();
+
+        // 1. Evaluate Friends
+        for (int i = 0; i < net.friends.Count; i++)
         {
-            AnimalRelationshipRule rule = relationshipRules[i];
-            if (rule.targetAnimal != targetAnimal) continue;
+            AnimalRelationLink link = net.friends[i];
+            EncounterOutcome state = GetAnimalState(link.animal);
+            if (state == EncounterOutcome.Unvisited) continue;
 
-            if (GetAnimalState(rule.relatedAnimal) == rule.triggerOutcome)
+            string otherName = string.IsNullOrWhiteSpace(link.displayName)
+                ? link.animal.ToString()
+                : link.displayName;
+
+            if (state == EncounterOutcome.Defeated)
             {
-                mods.hasActiveRule = true;
-                if (rule.isEnraged)
-                    mods.isEnraged = true;
-
-                mods.hpMultiplier *= rule.hpMultiplier;
-                mods.rpMultiplier *= rule.rpMultiplier;
-                mods.bulletSpeedMultiplier *= rule.bulletSpeedMultiplier;
-                mods.burstIntervalMultiplier *= rule.burstIntervalMultiplier;
-
-                Color safeTint = rule.spriteTint;
-                if (safeTint.a <= 0.01f)
-                    safeTint = new Color(1f, 0.72f, 0.72f, 1f); // Safeguard against Unity's 0-alpha default
-                mods.spriteTint = safeTint;
-
-                if (!string.IsNullOrWhiteSpace(rule.customBattlePrompt))
-                    mods.customBattlePrompt = rule.customBattlePrompt;
-
-                if (rule.overworldDialogueLines != null && rule.overworldDialogueLines.Length > 0)
-                    mods.overworldDialogueLines = rule.overworldDialogueLines;
+                score -= 1;
+                angerReasons.Add(otherName);
+                AddReactionLines(gatheredDialogue, link.onDefeatedLines,
+                    $"You hurt {otherName}?! They were my friend—I won't go easy on you!");
+            }
+            else if (state == EncounterOutcome.Befriended)
+            {
+                score += 1;
+                happyReasons.Add(otherName);
+                AddReactionLines(gatheredDialogue, link.onBefriendedLines,
+                    $"{otherName} told me how kind you were! Any friend of theirs is a friend of mine.");
             }
         }
 
+        // 2. Evaluate Enemies
+        for (int i = 0; i < net.enemies.Count; i++)
+        {
+            AnimalRelationLink link = net.enemies[i];
+            EncounterOutcome state = GetAnimalState(link.animal);
+            if (state == EncounterOutcome.Unvisited) continue;
+
+            string otherName = string.IsNullOrWhiteSpace(link.displayName)
+                ? link.animal.ToString()
+                : link.displayName;
+
+            if (state == EncounterOutcome.Defeated)
+            {
+                score += 1;
+                happyReasons.Add(otherName);
+                AddReactionLines(gatheredDialogue, link.onDefeatedLines,
+                    $"Ha! You finally put {otherName} in their place! You've got my respect.");
+            }
+            else if (state == EncounterOutcome.Befriended)
+            {
+                score -= 1;
+                angerReasons.Add(otherName);
+                AddReactionLines(gatheredDialogue, link.onBefriendedLines,
+                    $"So you're buddy-buddy with {otherName} now?! That makes you my problem too!");
+            }
+        }
+
+        mods.sentimentScore = score;
+
+        // Even if net score cancels to 0 (e.g., +1 and -1), still play the specific dialogue lines if any occurred
+        if (gatheredDialogue.Count > 0)
+        {
+            mods.hasActiveRule = true;
+            mods.overworldDialogueLines = gatheredDialogue.ToArray();
+        }
+
+        if (score < 0)
+        {
+            int anger = Mathf.Abs(score);
+            mods.hasActiveRule = true;
+            mods.isEnraged = true;
+            mods.hpMultiplier = 1f + (anger * hostileHpStep);
+            mods.rpMultiplier = 1f + (anger * hostileRpStep);
+            mods.bulletSpeedMultiplier = 1f + (anger * hostileSpeedStep);
+            mods.burstIntervalMultiplier = Mathf.Max(0.60f, 1f - (anger * hostileIntervalStep));
+            mods.spriteTint = enragedTint.a > 0.01f ? enragedTint : new Color(1f, 0.72f, 0.72f, 1f);
+
+            string reasonList = angerReasons.Count > 0 ? string.Join(" and ", angerReasons) : "what happened on the farm";
+            mods.customBattlePrompt = $"{targetAnimal} is furious about {reasonList}! Fight or Run?";
+        }
+        else if (score > 0)
+        {
+            mods.hasActiveRule = true;
+            mods.isEnraged = false;
+            mods.hpMultiplier = Mathf.Max(0.75f, 1f - (score * friendlyHpStep));
+            mods.rpMultiplier = Mathf.Max(0.65f, 1f - (score * friendlyRpStep));
+            mods.bulletSpeedMultiplier = 1f;
+            mods.burstIntervalMultiplier = 1f;
+            mods.spriteTint = friendlyTint.a > 0.01f ? friendlyTint : Color.white;
+
+            string reasonList = happyReasons.Count > 0 ? string.Join(" and ", happyReasons) : "your reputation";
+            mods.customBattlePrompt = $"{targetAnimal} respects you because of {reasonList}! Fight or Run?";
+        }
+
         return mods;
+    }
+
+    private static void AddReactionLines(List<string> target, string[] customLines, string fallbackLine)
+    {
+        if (customLines != null && customLines.Length > 0)
+        {
+            for (int i = 0; i < customLines.Length; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(customLines[i]))
+                    target.Add(customLines[i]);
+            }
+        }
+        else
+        {
+            target.Add(fallbackLine);
+        }
     }
 }

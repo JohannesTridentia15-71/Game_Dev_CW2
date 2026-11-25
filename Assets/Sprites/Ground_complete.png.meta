@@ -148,7 +148,7 @@ TextureImporter:
         y: 36
         width: 16
         height: 16
-      alignment: 9
+      alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -214,7 +214,7 @@ TextureImporter:
         y: 36
         width: 16
         height: 16
-      alignment: 9
+      alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -277,7 +277,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 103
-        y: 36
+        y: 2
         width: 16
         height: 16
       alignment: 0
@@ -298,8 +298,8 @@ TextureImporter:
       name: Ground_complete_7
       rect:
         serializedVersion: 2
-        x: 1
-        y: 19
+        x: 120
+        y: 36
         width: 16
         height: 16
       alignment: 0
@@ -320,8 +320,8 @@ TextureImporter:
       name: Ground_complete_8
       rect:
         serializedVersion: 2
-        x: 18
-        y: 19
+        x: 137
+        y: 36
         width: 16
         height: 16
       alignment: 0
@@ -342,12 +342,12 @@ TextureImporter:
       name: Ground_complete_9
       rect:
         serializedVersion: 2
-        x: 35
-        y: 19
+        x: 154
+        y: 36
         width: 16
         height: 16
-      alignment: 9
-      pivot: {x: 0.51833487, y: 0.5091678}
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -364,7 +364,7 @@ TextureImporter:
       name: Ground_complete_10
       rect:
         serializedVersion: 2
-        x: 52
+        x: 1
         y: 19
         width: 16
         height: 16
@@ -386,7 +386,7 @@ TextureImporter:
       name: Ground_complete_11
       rect:
         serializedVersion: 2
-        x: 69
+        x: 35
         y: 19
         width: 16
         height: 16
@@ -408,7 +408,7 @@ TextureImporter:
       name: Ground_complete_12
       rect:
         serializedVersion: 2
-        x: 86
+        x: 52
         y: 19
         width: 16
         height: 16
@@ -430,8 +430,8 @@ TextureImporter:
       name: Ground_complete_13
       rect:
         serializedVersion: 2
-        x: 103
-        y: 19
+        x: 69
+        y: 2
         width: 16
         height: 16
       alignment: 0
@@ -452,8 +452,8 @@ TextureImporter:
       name: Ground_complete_14
       rect:
         serializedVersion: 2
-        x: 1
-        y: 2
+        x: 120
+        y: 19
         width: 16
         height: 16
       alignment: 0
@@ -474,8 +474,8 @@ TextureImporter:
       name: Ground_complete_15
       rect:
         serializedVersion: 2
-        x: 18
-        y: 2
+        x: 137
+        y: 19
         width: 16
         height: 16
       alignment: 0
@@ -496,7 +496,7 @@ TextureImporter:
       name: Ground_complete_16
       rect:
         serializedVersion: 2
-        x: 35
+        x: 1
         y: 2
         width: 16
         height: 16
@@ -518,7 +518,7 @@ TextureImporter:
       name: Ground_complete_17
       rect:
         serializedVersion: 2
-        x: 52
+        x: 18
         y: 2
         width: 16
         height: 16
@@ -540,7 +540,7 @@ TextureImporter:
       name: Ground_complete_18
       rect:
         serializedVersion: 2
-        x: 69
+        x: 35
         y: 2
         width: 16
         height: 16
@@ -562,7 +562,7 @@ TextureImporter:
       name: Ground_complete_19
       rect:
         serializedVersion: 2
-        x: 86
+        x: 120
         y: 2
         width: 16
         height: 16
@@ -584,7 +584,7 @@ TextureImporter:
       name: Ground_complete_20
       rect:
         serializedVersion: 2
-        x: 103
+        x: 137
         y: 2
         width: 16
         height: 16
@@ -598,6 +598,160 @@ TextureImporter:
       bones: []
       spriteID: 43b94d98e95641649af48131f4e3c29a
       internalID: -1455788208
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_complete_21
+      rect:
+        serializedVersion: 2
+        x: 18
+        y: 19
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e6976edbc99819b488a1f21b3b07de81
+      internalID: -961635791
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_complete_22
+      rect:
+        serializedVersion: 2
+        x: 52
+        y: 2
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b585b96bb9eb093419254d38d9fda39a
+      internalID: 607756796
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_complete_23
+      rect:
+        serializedVersion: 2
+        x: 69
+        y: 19
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8ee8c4a74d3e1314ea16fd525514ae5f
+      internalID: 733158799
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_complete_24
+      rect:
+        serializedVersion: 2
+        x: 86
+        y: 19
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 79c0d58ca9e68d34eaa23b0ddd63222b
+      internalID: 938099178
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_complete_25
+      rect:
+        serializedVersion: 2
+        x: 86
+        y: 2
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: de681ab2e719c574f95cf710e9a77f2f
+      internalID: 278442266
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_complete_26
+      rect:
+        serializedVersion: 2
+        x: 103
+        y: 19
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cfe0b4b2267e1ba48b3c490056db8778
+      internalID: 220426483
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_complete_27
+      rect:
+        serializedVersion: 2
+        x: 103
+        y: 36
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ac9b7ba6278a971428781a94cd38f2f1
+      internalID: 324417942
       vertices: []
       indices: 
       edges: []
@@ -616,7 +770,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries:
       - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":16.0,"y":16.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":16.0,"y":16.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
       Ground_complete_0: -6660534529819654762
       Ground_complete_1: -2335394862012258646
@@ -632,6 +786,13 @@ TextureImporter:
       Ground_complete_19: 1234695530
       Ground_complete_2: -819389253273736887
       Ground_complete_20: -1455788208
+      Ground_complete_21: -961635791
+      Ground_complete_22: 607756796
+      Ground_complete_23: 733158799
+      Ground_complete_24: 938099178
+      Ground_complete_25: 278442266
+      Ground_complete_26: 220426483
+      Ground_complete_27: 324417942
       Ground_complete_3: -1808821452033610338
       Ground_complete_4: 3320368665184803692
       Ground_complete_5: 3264232917601551300

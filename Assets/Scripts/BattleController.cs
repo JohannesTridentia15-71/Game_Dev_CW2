@@ -114,12 +114,27 @@ public class BattleController : MonoBehaviour
             maxEnemyHP = Mathf.Round(maxEnemyHP * relMods.hpMultiplier);
             maxEnemyRP = Mathf.Round(maxEnemyRP * relMods.rpMultiplier);
 
-            if (relMods.isEnraged)
-                opponentLabel += " (Enraged)";
+            if (relMods.sentimentScore < 0)
+            {
+                int angerLevel = Mathf.Abs(relMods.sentimentScore);
+                opponentLabel += angerLevel > 1
+                    ? $" (Enraged x{angerLevel})"
+                    : " (Enraged)";
+            }
+            else if (relMods.sentimentScore > 0)
+            {
+                int happyLevel = relMods.sentimentScore;
+                opponentLabel += happyLevel > 1
+                    ? $" (Friendly x{happyLevel})"
+                    : " (Friendly)";
+            }
 
             if (opponentSpriteRenderer != null)
                 opponentSpriteRenderer.color = relMods.spriteTint;
         }
+
+        if (opponentNameText != null)
+            opponentNameText.text = opponentLabel;
 
         if (opponentNameText != null)
             opponentNameText.text = opponentLabel;
