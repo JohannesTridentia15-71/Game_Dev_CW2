@@ -5,7 +5,9 @@ public enum PatternShape
     AimedFan,        // Spread of bullets aimed at the egg
     RadialRing,      // 360-degree burst from the arena center
     WallWithGap,     // Line of bullets sweeping across the box with 1 guaranteed safe opening
-    StampedeCross    // Two opposite walls firing inward simultaneously with offset safe gaps
+    StampedeCross,   // Two opposite walls firing inward simultaneously with offset safe gaps
+    Pinwheel,        // Multi-spoke spiral stream rotating continuously around the arena center
+    AlternatingWall  // WallWithGap that strictly alternates between horizontal and vertical each volley
 }
 
 [CreateAssetMenu(fileName = "NewAttackPattern", menuName = "Battle/Attack Pattern")]
@@ -20,9 +22,9 @@ public class AttackPatternSO : ScriptableObject
     public float burstInterval = 1.1f;    // Time between volleys inside this wave
 
     [Header("Shape Tuning")]
-    [Tooltip("Fan spread angle in degrees (AimedFan)")]
+    [Tooltip("Fan spread angle in degrees (AimedFan) or rotation step per tick in degrees (Pinwheel)")]
     public float angleParameter = 45f;
-    [Tooltip("Width of the safe gap in world units (WallWithGap / StampedeCross)")]
+    [Tooltip("Width of the safe gap in world units (WallWithGap / StampedeCross / AlternatingWall)")]
     public float safeGapWidth = 1.35f;
 
     [Header("Bullet Flight Behavior")]

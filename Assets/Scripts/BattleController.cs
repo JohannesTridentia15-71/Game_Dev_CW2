@@ -307,6 +307,9 @@ public class BattleController : MonoBehaviour
         currentEnemyHP = maxEnemyHP;
         UpdateMeters();
 
+        if (projectileSpawner != null)
+            projectileSpawner.ResetPatternOrder();
+
         if (StoryManager.Instance != null)
         {
             StoryManager.Instance.ResolvePlayerLostBattle(currentOpponent);

@@ -4626,7 +4626,7 @@ MonoBehaviour:
   battleController: {fileID: 1485084590}
   eggMovement: {fileID: 792714792}
   eggHealth: {fileID: 792714794}
-  unlockAllForTesting: 0
+  unlockAllForTesting: 1
   woolBarrierVisual: {fileID: 0}
   woolBarrierDuration: 3.5
   woolBarrierMaxCharges: 2
@@ -5420,7 +5420,7 @@ MonoBehaviour:
   defaultProjectilePrefab: {fileID: 6305524168861119705, guid: 7fda626e489c9424b8b96c6023fbaa92, type: 3}
   telegraphMarkerPrefab: {fileID: 8716343391857492915, guid: 7864eb7e6aac6416bb7a819bcee07baa, type: 3}
   targetEgg: {fileID: 792714790}
-  boxHalfSize: 3.5
+  boxHalfSize: 2.9
   animalAttackSets:
   - animal: 0
     patterns:
@@ -5435,13 +5435,25 @@ MonoBehaviour:
     - {fileID: 11400000, guid: afab830548a88428ab9ca226e46d261f, type: 2}
     - {fileID: 11400000, guid: a16d1d47ac2974d5a8282c7b0c0b8d48, type: 2}
   - animal: 3
-    patterns: []
+    patterns:
+    - {fileID: 11400000, guid: 80041246bc3d54308a00a093cbde413a, type: 2}
+    - {fileID: 11400000, guid: 80d04d988b8e74ad98e6f1ca1394795f, type: 2}
   - animal: 4
-    patterns: []
+    patterns:
+    - {fileID: 11400000, guid: dbc5ee855742e4ae6badc1636c6c344f, type: 2}
+    - {fileID: 11400000, guid: 9cb11201fa5e047aca5de4d3b1b8e10c, type: 2}
+    - {fileID: 11400000, guid: b0cff968f5ce24129865d8fc09153dc0, type: 2}
   - animal: 5
-    patterns: []
+    patterns:
+    - {fileID: 11400000, guid: 940e9aa9e735f4736a74a7c9c51e111e, type: 2}
+    - {fileID: 11400000, guid: b6c208278924e47099866e03bbbc0668, type: 2}
+    - {fileID: 11400000, guid: 1fdbea997b077494d9df73efa813358f, type: 2}
   - animal: 6
-    patterns: []
+    patterns:
+    - {fileID: 11400000, guid: cda15dc53d5a2484cb28553b76ccf8e0, type: 2}
+    - {fileID: 11400000, guid: ebab094d76b864cc080260bf1233d4c1, type: 2}
+    - {fileID: 11400000, guid: 94db3399122124c3d8f28a9492789c8e, type: 2}
+    - {fileID: 11400000, guid: c06e60934b76d4fd28d57b5bd44533c1, type: 2}
   fallbackPatterns:
   - {fileID: 11400000, guid: 87a75308eec1b4992ba08127b89e6661, type: 2}
   - {fileID: 11400000, guid: 10797bcbeee9c45b7a4aac0d83487de4, type: 2}
@@ -6636,37 +6648,37 @@ MonoBehaviour:
     abilityHotkeyLabel: 
     abilityDescription: 
   - animal: 3
-    displayName: Rooster
+    displayName: Indiana Bones
     battleSprite: {fileID: 1315129547176965255, guid: 9be1d7b346ece60469560798934fbebe, type: 3}
-    maxHP: 100
+    maxHP: 120
     maxRP: 100
-    rpGainPerSecond: 1
-    peckCooldown: 2
+    rpGainPerSecond: 3.5
+    peckCooldown: 4
     unlockedAbilityName: 
     abilityHotkeyLabel: 
     abilityDescription: 
   - animal: 4
-    displayName: Rooster
+    displayName: Al Capony
     battleSprite: {fileID: 1315129547176965255, guid: 9be1d7b346ece60469560798934fbebe, type: 3}
-    maxHP: 100
-    maxRP: 100
+    maxHP: 150
+    maxRP: 120
     rpGainPerSecond: 1
-    peckCooldown: 2
+    peckCooldown: 4
     unlockedAbilityName: 
     abilityHotkeyLabel: 
     abilityDescription: 
   - animal: 5
-    displayName: Rooster
+    displayName: Calvin Swine
     battleSprite: {fileID: 1315129547176965255, guid: 9be1d7b346ece60469560798934fbebe, type: 3}
-    maxHP: 100
+    maxHP: 130
     maxRP: 100
-    rpGainPerSecond: 1
-    peckCooldown: 2
+    rpGainPerSecond: 3.5
+    peckCooldown: 4
     unlockedAbilityName: 
     abilityHotkeyLabel: 
     abilityDescription: 
   - animal: 6
-    displayName: Rooster
+    displayName: Wingston Churchill
     battleSprite: {fileID: 1315129547176965255, guid: 9be1d7b346ece60469560798934fbebe, type: 3}
     maxHP: 100
     maxRP: 100
@@ -7352,18 +7364,16 @@ MonoBehaviour:
   startingLives: 4
   maxLives: 5
   maxPride: 5
-  defaultOpponent: 2
-  relationshipRules:
-  - targetAnimal: 0
-    relatedAnimal: 0
-    triggerOutcome: 0
-    overworldDialogueLines: []
-    hpMultiplier: 0
-    rpMultiplier: 0
-    bulletSpeedMultiplier: 0
-    burstIntervalMultiplier: 0
-    customBattlePrompt: 
-    spriteTint: {r: 0, g: 0, b: 0, a: 0}
+  defaultOpponent: 0
+  socialNetworks: []
+  hostileHpStep: 0.12
+  hostileRpStep: 0.1
+  hostileSpeedStep: 0.1
+  hostileIntervalStep: 0.08
+  friendlyRpStep: 0.08
+  friendlyHpStep: 0.05
+  enragedTint: {r: 1, g: 0.72, b: 0.72, a: 1}
+  friendlyTint: {r: 0.85, g: 1, b: 0.85, a: 1}
 --- !u!4 &1788329040
 Transform:
   m_ObjectHideFlags: 0

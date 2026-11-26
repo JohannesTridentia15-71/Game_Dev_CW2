@@ -96,6 +96,9 @@ public class ProjectileSpawner : MonoBehaviour
     {
         float waveElapsed = 0f;
         float ringAngle = Random.Range(0f, 360f);
+        float spinDirection = Random.value > 0.5f ? 1f : -1f; // Clockwise or counter-clockwise per wave
+        bool nextWallHorizontal = Random.value > 0.5f;
+        bool firstVolley = true;
 
         BattleRelationshipModifiers relMods = StoryManager.Instance != null
             ? StoryManager.Instance.GetBattleModifiersFor(StoryManager.Instance.CurrentOpponent)
@@ -106,9 +109,14 @@ public class ProjectileSpawner : MonoBehaviour
 
         while (isSpawning && waveElapsed < pattern.duration)
         {
-            List<PlannedShot> shots = BuildVolleyShots(pattern, ref ringAngle);
+            List<PlannedShot> shots = BuildVolleyShots(pattern, ref ringAngle, spinDirection, ref nextWallHorizontal);
 
-            if (pattern.telegraphDuration > 0f && telegraphMarkerPrefab != null)
+            // For Pinwheel, telegraph only before the first spoke burst so the spiral stays continuous
+            bool shouldTelegraph = pattern.telegraphDuration > 0f
+                && telegraphMarkerPrefab != null
+                && (pattern.shape != PatternShape.Pinwheel || firstVolley);
+
+            if (shouldTelegraph)
             {
                 SpawnTelegraphMarkers(pattern.shape, shots);
                 yield return new WaitForSeconds(pattern.telegraphDuration);
@@ -117,6 +125,8 @@ public class ProjectileSpawner : MonoBehaviour
 
                 if (!isSpawning) yield break;
             }
+
+            firstVolley = false;
 
             foreach (var shot in shots)
             {
@@ -128,7 +138,11 @@ public class ProjectileSpawner : MonoBehaviour
         }
     }
 
-    private List<PlannedShot> BuildVolleyShots(AttackPatternSO pattern, ref float ringAngle)
+    private List<PlannedShot> BuildVolleyShots(
+        AttackPatternSO pattern,
+        ref float ringAngle,
+        float spinDirection,
+        ref bool nextWallHorizontal)
     {
         var shots = new List<PlannedShot>();
 
@@ -192,6 +206,31 @@ public class ProjectileSpawner : MonoBehaviour
                 AddWallShots(shots, horizontalPair, 1f, gapA, pattern.safeGapWidth, pattern.bulletCount);
                 AddWallShots(shots, horizontalPair, -1f, gapB, pattern.safeGapWidth, pattern.bulletCount);
                 break;
+
+            case PatternShape.Pinwheel:
+                int spokeCount = Mathf.Max(2, pattern.bulletCount);
+                float spokeStep = 360f / spokeCount;
+                float stepAngle = Mathf.Abs(pattern.angleParameter) > 0.01f ? pattern.angleParameter : 14f;
+
+                for (int i = 0; i < spokeCount; i++)
+                {
+                    float angle = ringAngle + (spokeStep * i);
+                    Vector2 dir = AngleToVector(angle);
+                    shots.Add(new PlannedShot
+                    {
+                        position = (Vector2)transform.position + dir * 0.35f,
+                        direction = dir
+                    });
+                }
+                ringAngle += stepAngle * spinDirection;
+                break;
+
+            case PatternShape.AlternatingWall:
+                float altSign = Random.value > 0.5f ? 1f : -1f;
+                float altGapCenter = Random.Range(-boxHalfSize + pattern.safeGapWidth, boxHalfSize - pattern.safeGapWidth);
+                AddWallShots(shots, nextWallHorizontal, altSign, altGapCenter, pattern.safeGapWidth, pattern.bulletCount);
+                nextWallHorizontal = !nextWallHorizontal; // Flip between horizontal and vertical every volley
+                break;
         }
 
         return shots;
@@ -237,10 +276,12 @@ public class ProjectileSpawner : MonoBehaviour
                 break;
 
             case PatternShape.RadialRing:
+            case PatternShape.Pinwheel:
                 activeMarkers.Add(Instantiate(telegraphMarkerPrefab, transform.position, Quaternion.identity));
                 break;
 
             case PatternShape.WallWithGap:
+            case PatternShape.AlternatingWall:
                 Vector2 avgPos = Vector2.zero;
                 for (int i = 0; i < shots.Count; i++) avgPos += shots[i].position;
                 avgPos /= shots.Count;
@@ -328,5 +369,11 @@ public class ProjectileSpawner : MonoBehaviour
     {
         float rad = degrees * Mathf.Deg2Rad;
         return new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
+    }
+
+    public void ResetPatternOrder()
+    {
+        patternIndex = 0;
+        ClearActiveMarkers();
     }
 }
