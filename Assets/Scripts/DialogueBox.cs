@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 [System.Serializable]
@@ -17,7 +18,14 @@ public class DialogueBox : MonoBehaviour
     [SerializeField] private GameObject boxRoot;
     [SerializeField] private TMP_Text speakerText;
     [SerializeField] private TMP_Text bodyText;
-    [SerializeField] private GameObject continueIndicator; // Optional blinking arrow/prompt
+    [SerializeField] private GameObject continueIndicator;
+
+    [Header("Optional Choice Buttons")]
+    [SerializeField] private GameObject choicePanel;
+    [SerializeField] private Button primaryChoiceButton;
+    [SerializeField] private TMP_Text primaryChoiceText;
+    [SerializeField] private Button secondaryChoiceButton;
+    [SerializeField] private TMP_Text secondaryChoiceText;
 
     [Header("Typewriter Settings")]
     [SerializeField] private float charactersPerSecond = 45f;
@@ -28,7 +36,15 @@ public class DialogueBox : MonoBehaviour
     private string currentFullLine;
     private bool isTyping;
     private bool openedThisFrame;
+    private bool waitingForChoice;
     private Action onDialogueFinished;
+
+    // Pending two-button prompt shown after the last line finishes typing
+    private bool hasPendingChoice;
+    private string pendingPrimaryLabel;
+    private Action pendingPrimaryCallback;
+    private string pendingSecondaryLabel;
+    private Action pendingSecondaryCallback;
 
     public bool IsOpen => boxRoot != null && boxRoot.activeSelf;
 
@@ -36,6 +52,9 @@ public class DialogueBox : MonoBehaviour
     {
         if (boxRoot == null && transform.childCount > 0)
             boxRoot = transform.GetChild(0).gameObject;
+
+        if (choicePanel != null)
+            choicePanel.SetActive(false);
 
         if (boxRoot != null)
             boxRoot.SetActive(false);
@@ -54,7 +73,7 @@ public class DialogueBox : MonoBehaviour
         {
             if (isTyping)
                 CompleteCurrentLineImmediately();
-            else
+            else if (!waitingForChoice)
                 DisplayNextLine();
         }
     }
@@ -64,11 +83,9 @@ public class DialogueBox : MonoBehaviour
         openedThisFrame = false;
     }
 
-    /// <summary>
-    /// Starts a multi-line conversation with speaker names.
-    /// </summary>
     public void StartDialogue(IEnumerable<DialogueLine> lines, Action onComplete = null)
     {
+        ClearChoiceState();
         lineQueue.Clear();
         foreach (var line in lines)
             lineQueue.Enqueue(line);
@@ -82,9 +99,6 @@ public class DialogueBox : MonoBehaviour
         DisplayNextLine();
     }
 
-    /// <summary>
-    /// Convenience overload for quick single-speaker lines.
-    /// </summary>
     public void StartDialogue(string speaker, string[] lines, Action onComplete = null)
     {
         var formatted = new List<DialogueLine>();
@@ -94,10 +108,45 @@ public class DialogueBox : MonoBehaviour
         StartDialogue(formatted, onComplete);
     }
 
+    /// <summary>
+    /// Plays lines and presents two choice buttons once the final line finishes typing.
+    /// </summary>
+    public void StartDialogueWithChoices(
+        string speaker,
+        string[] lines,
+        string primaryLabel,
+        Action onPrimarySelected,
+        string secondaryLabel,
+        Action onSecondarySelected)
+    {
+        ClearChoiceState();
+        lineQueue.Clear();
+        foreach (string text in lines)
+            lineQueue.Enqueue(new DialogueLine { speakerName = speaker, text = text });
+
+        hasPendingChoice = true;
+        pendingPrimaryLabel = primaryLabel;
+        pendingPrimaryCallback = onPrimarySelected;
+        pendingSecondaryLabel = secondaryLabel;
+        pendingSecondaryCallback = onSecondarySelected;
+        openedThisFrame = true;
+
+        if (boxRoot != null)
+            boxRoot.SetActive(true);
+
+        DisplayNextLine();
+    }
+
     private void DisplayNextLine()
     {
         if (lineQueue.Count == 0)
         {
+            if (hasPendingChoice)
+            {
+                ShowChoiceButtons();
+                return;
+            }
+
             CloseDialogue();
             return;
         }
@@ -138,9 +187,7 @@ public class DialogueBox : MonoBehaviour
                 yield return new WaitForSecondsRealtime(delay);
         }
 
-        isTyping = false;
-        if (continueIndicator != null)
-            continueIndicator.SetActive(true);
+        OnLineFinishedTyping();
     }
 
     private void CompleteCurrentLineImmediately()
@@ -150,10 +197,66 @@ public class DialogueBox : MonoBehaviour
 
         bodyText.text = currentFullLine;
         bodyText.maxVisibleCharacters = int.MaxValue;
+        OnLineFinishedTyping();
+    }
+
+    private void OnLineFinishedTyping()
+    {
         isTyping = false;
 
-        if (continueIndicator != null)
+        if (lineQueue.Count == 0 && hasPendingChoice)
+        {
+            ShowChoiceButtons();
+        }
+        else if (continueIndicator != null)
+        {
             continueIndicator.SetActive(true);
+        }
+    }
+
+    private void ShowChoiceButtons()
+    {
+        waitingForChoice = true;
+        if (continueIndicator != null)
+            continueIndicator.SetActive(false);
+
+        if (choicePanel != null)
+            choicePanel.SetActive(true);
+
+        if (primaryChoiceText != null)
+            primaryChoiceText.text = pendingPrimaryLabel;
+        if (secondaryChoiceText != null)
+            secondaryChoiceText.text = pendingSecondaryLabel;
+
+        if (primaryChoiceButton != null)
+        {
+            primaryChoiceButton.onClick.RemoveAllListeners();
+            primaryChoiceButton.onClick.AddListener(() => SelectChoice(pendingPrimaryCallback));
+        }
+
+        if (secondaryChoiceButton != null)
+        {
+            secondaryChoiceButton.onClick.RemoveAllListeners();
+            secondaryChoiceButton.onClick.AddListener(() => SelectChoice(pendingSecondaryCallback));
+        }
+    }
+
+    private void SelectChoice(Action chosenCallback)
+    {
+        ClearChoiceState();
+        CloseDialogue();
+        chosenCallback?.Invoke();
+    }
+
+    private void ClearChoiceState()
+    {
+        waitingForChoice = false;
+        hasPendingChoice = false;
+        pendingPrimaryCallback = null;
+        pendingSecondaryCallback = null;
+
+        if (choicePanel != null)
+            choicePanel.SetActive(false);
     }
 
     public void CloseDialogue()
@@ -163,6 +266,7 @@ public class DialogueBox : MonoBehaviour
 
         isTyping = false;
         lineQueue.Clear();
+        ClearChoiceState();
 
         if (boxRoot != null)
             boxRoot.SetActive(false);

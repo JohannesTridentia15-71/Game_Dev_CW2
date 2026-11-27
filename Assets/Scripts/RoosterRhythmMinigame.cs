@@ -16,6 +16,7 @@ public class RoosterRhythmMinigame : MonoBehaviour
     [SerializeField] private TMP_Text instructionText;
     [SerializeField] private TMP_Text feedbackText;
     [SerializeField] private TMP_Text progressText;
+    public static bool IsMinigameOpen { get; private set; }
 
     [Header("Player & Dialogue References")]
     [SerializeField] private ChickenMovement playerMovement;
@@ -59,6 +60,7 @@ public class RoosterRhythmMinigame : MonoBehaviour
 
     private void Start()
     {
+        IsMinigameOpen = false;
         if (minigamePanel != null)
             minigamePanel.SetActive(false);
 
@@ -88,9 +90,10 @@ public class RoosterRhythmMinigame : MonoBehaviour
     /// </summary>
     public void StartTraining()
     {
+        IsMinigameOpen = true;
         if (dialogueBox != null && dialogueBox.IsOpen)
             dialogueBox.CloseDialogue();
-            
+
         if (isRunning) return;
 
         isRunning = true;
@@ -105,7 +108,7 @@ public class RoosterRhythmMinigame : MonoBehaviour
             minigamePanel.SetActive(true);
 
         if (instructionText != null)
-            instructionText.text = $"Hit {streakRequiredToWin} in a row! Press [SPACE] or [E] on the ring!";
+            instructionText.text = $"Hit {streakRequiredToWin} in a row! Press SPACE when the rings overlap.";
 
         if (feedbackText != null)
             feedbackText.text = "Focus your breathing...";
@@ -234,6 +237,7 @@ public class RoosterRhythmMinigame : MonoBehaviour
 
     private IEnumerator FinishTrainingRoutine()
     {
+        IsMinigameOpen = false;
         if (feedbackText != null)
             feedbackText.text = "SPIRIT RESTORED!";
 

@@ -141,7 +141,8 @@ public class ChickenMovement : MonoBehaviour
         if (interactPrompt == null) return;
 
         bool isTalking = dialogueBox != null && dialogueBox.IsOpen;
-        interactPrompt.SetActive(nearbyInteractablesCount > 0 && !isTalking);
+        bool inMinigame = RoosterRhythmMinigame.IsMinigameOpen;
+        interactPrompt.SetActive(nearbyInteractablesCount > 0 && canMove && !isTalking && !inMinigame);
     }
 
     private IEnumerator ShowPendingThoughtNextFrame(string[] lines)

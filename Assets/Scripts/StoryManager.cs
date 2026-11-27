@@ -32,6 +32,7 @@ public enum GameEnding
 {
     None,
     GameOverLostFight,
+    GameOverGaveUp,
     // Eagle Defeated (Win) Endings
     Win_LowPride_BarnParty,
     Win_MediumPride_HoardFood,
@@ -435,5 +436,12 @@ public class StoryManager : MonoBehaviour
         {
             target.Add(fallbackLine);
         }
+    }
+
+    public void TriggerGaveUpEnding()
+    {
+        CurrentLives = 0;
+        OnStatsChanged?.Invoke();
+        OnGameEnded?.Invoke(GameEnding.GameOverGaveUp);
     }
 }

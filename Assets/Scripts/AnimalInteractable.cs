@@ -58,6 +58,23 @@ public class AnimalInteractable : MonoBehaviour
         "...You look completely broken right now. I'm not fighting you like this—go talk to the Rooster."
     };
 
+    [TextArea(2, 4)]
+    [SerializeField] private string[] roosterInsistFirstLines = new[]
+    {
+        "Give up?! Madame Henriette didn't believe in you just so you'd fold at the first storm!",
+        "Come on—stand up and train with me. Will you keep going?"
+    };
+
+    [TextArea(2, 4)]
+    [SerializeField] private string[] roosterInsistFinalLines = new[]
+    {
+        "Listen to me carefully—this is the last time I'm asking. If you walk away now, it's over.",
+        "For Madame Henriette, and for the whole farm... please, keep going!"
+    };
+
+    [SerializeField] private string keepGoingChoiceLabel = "Keep Going";
+    [SerializeField] private string giveUpChoiceLabel = "Give Up";
+    [SerializeField] private string gameOverSceneName = "GameOver";
     [Tooltip("Hook your Rooster Rhythm Training Minigame starter here")]
     public UnityEvent onStartRoosterTraining;
 
@@ -170,6 +187,7 @@ public class AnimalInteractable : MonoBehaviour
     {
         if (!playerInRange) return;
         if (dialogueBox != null && dialogueBox.IsOpen) return;
+        if (RoosterRhythmMinigame.IsMinigameOpen) return;
 
         if (Input.GetKeyDown(interactKey))
         {
@@ -200,19 +218,10 @@ public class AnimalInteractable : MonoBehaviour
         }
 
         // 3. Rooster training trigger while heartbroken
+        // 3. Rooster training trigger while heartbroken (with 3-chance Keep Going / Give Up choice)
         if (isHeartbroken && animalType == AnimalType.Rooster)
         {
-            if (dialogueBox != null)
-            {
-                dialogueBox.StartDialogue(speakerName, roosterHeartbrokenLines, onComplete: () =>
-                {
-                    onStartRoosterTraining?.Invoke();
-                });
-            }
-            else
-            {
-                onStartRoosterTraining?.Invoke();
-            }
+            PromptRoosterHeartbreakChoice(0);
             return;
         }
 
@@ -319,5 +328,48 @@ public class AnimalInteractable : MonoBehaviour
                 cachedPlayer = null;
             }
         }
+    }
+
+    private void PromptRoosterHeartbreakChoice(int giveUpAttempts)
+    {
+        if (dialogueBox == null)
+        {
+            onStartRoosterTraining?.Invoke();
+            return;
+        }
+
+        string[] lines = giveUpAttempts switch
+        {
+            0 => roosterHeartbrokenLines,
+            1 => roosterInsistFirstLines,
+            _ => roosterInsistFinalLines
+        };
+
+        dialogueBox.StartDialogueWithChoices(
+            speakerName,
+            lines,
+            keepGoingChoiceLabel,
+            () => onStartRoosterTraining?.Invoke(),
+            giveUpChoiceLabel,
+            () => HandleRoosterGiveUpSelected(giveUpAttempts)
+        );
+    }
+
+    private void HandleRoosterGiveUpSelected(int previousAttempts)
+    {
+        int nextAttempt = previousAttempts + 1;
+        if (nextAttempt <= 2)
+        {
+            PromptRoosterHeartbreakChoice(nextAttempt);
+            return;
+        }
+
+        if (StoryManager.Instance != null)
+            StoryManager.Instance.TriggerGaveUpEnding();
+
+        if (Application.CanStreamedLevelBeLoaded(gameOverSceneName))
+            SceneManager.LoadScene(gameOverSceneName);
+        else
+            Debug.LogWarning($"Game Over (Gave Up)! Add '{gameOverSceneName}' to Build Settings.");
     }
 }
