@@ -10,6 +10,7 @@ public class PrideMeterUI : MonoBehaviour
     [SerializeField] private TMP_Text prideValueText;
 
     [Header("Tier Colors")]
+    [SerializeField] private Color heartbrokenColor = new Color(0.45f, 0.55f, 0.78f); // Heartbroken (-1)
     [SerializeField] private Color lowPrideColor = new Color(0.35f, 0.78f, 0.45f);    // Humble (0-1)
     [SerializeField] private Color mediumPrideColor = new Color(0.95f, 0.72f, 0.22f); // Proud (2-3)
     [SerializeField] private Color highPrideColor = new Color(0.88f, 0.25f, 0.25f);   // Arrogant (4-5)
@@ -41,11 +42,12 @@ public class PrideMeterUI : MonoBehaviour
         {
             prideSlider.minValue = 0;
             prideSlider.maxValue = maxPride;
-            prideSlider.value = pride;
+            prideSlider.value = Mathf.Clamp(pride, 0, maxPride);
         }
 
         Color activeColor = tier switch
         {
+            PrideTier.Heartbroken => heartbrokenColor,
             PrideTier.Low => lowPrideColor,
             PrideTier.Medium => mediumPrideColor,
             _ => highPrideColor
@@ -58,6 +60,7 @@ public class PrideMeterUI : MonoBehaviour
         {
             string tierLabel = tier switch
             {
+                PrideTier.Heartbroken => "Heartbroken",
                 PrideTier.Low => "Humble",
                 PrideTier.Medium => "Proud",
                 _ => "Arrogant"

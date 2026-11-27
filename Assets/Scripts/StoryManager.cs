@@ -22,9 +22,10 @@ public enum EncounterOutcome
 
 public enum PrideTier
 {
-    Low,    // 0-1 Pride (Befriended most/all)
-    Medium, // 2-3 Pride (Fought some, befriended others)
-    High    // 4-5+ Pride (Fought most/all)
+    Heartbroken, // -1 Pride (Midgame tragedy active until Rooster training)
+    Low,         // 0-1 Pride (Befriended most/all)
+    Medium,      // 2-3 Pride (Fought some, befriended others)
+    High         // 4-5+ Pride (Fought most/all)
 }
 
 public enum GameEnding
@@ -52,6 +53,19 @@ public class StoryManager : MonoBehaviour
 
     public int CurrentLives { get; private set; }
     public int CurrentPride { get; private set; }
+
+    [Header("Midgame Tragedy & Heartbreak")]
+    [SerializeField] private int mainEncountersBeforeTragedy = 3;
+    [SerializeField] private float heartbrokenAttackMultiplier = 0.5f;
+    [SerializeField] private float heartbrokenRPMultiplier = 0.5f;
+
+    public bool HasTriggeredMidpointTragedy { get; private set; }
+    public bool IsHeartbroken { get; private set; }
+    public float ActiveAttackMultiplier => IsHeartbroken ? heartbrokenAttackMultiplier : 1f;
+    public float ActiveRPMultiplier => IsHeartbroken ? heartbrokenRPMultiplier : 1f;
+
+    private int savedPrideBeforeHeartbreak;
+    private HashSet<AnimalType> savedAbilitiesBeforeHeartbreak = new HashSet<AnimalType>();
 
     [Header("Active Battle Context")]
     [SerializeField] private AnimalType defaultOpponent = AnimalType.Sheep;
@@ -102,6 +116,10 @@ public class StoryManager : MonoBehaviour
         CurrentLives = startingLives;
         CurrentPride = 0;
         HasSavedOverworldPosition = false;
+        HasTriggeredMidpointTragedy = false;
+        IsHeartbroken = false;
+        savedPrideBeforeHeartbreak = 0;
+        savedAbilitiesBeforeHeartbreak.Clear();
         animalStates.Clear();
         unlockedAbilities.Clear();
 
@@ -134,11 +152,12 @@ public class StoryManager : MonoBehaviour
         animalStates[animal] = EncounterOutcome.Defeated;
         CurrentLives = Mathf.Clamp(CurrentLives + 1, 0, maxLives);
 
-        if (animal != AnimalType.Rooster)
+        if (animal != AnimalType.Rooster && !IsHeartbroken)
         {
             CurrentPride = Mathf.Clamp(CurrentPride + 1, 0, maxPride);
         }
 
+        CheckMidpointTragedyTrigger();
         OnStatsChanged?.Invoke();
         OnAnimalResolved?.Invoke(animal, EncounterOutcome.Defeated);
     }
@@ -152,16 +171,62 @@ public class StoryManager : MonoBehaviour
         }
 
         animalStates[animal] = EncounterOutcome.Befriended;
-        unlockedAbilities.Add(animal);
+        if (!IsHeartbroken)
+        {
+            unlockedAbilities.Add(animal);
+        }
         Debug.Log($"[StoryManager] Befriended {animal}. Total unlocked: {unlockedAbilities.Count}");
 
+        CheckMidpointTragedyTrigger();
         OnStatsChanged?.Invoke();
         OnAnimalResolved?.Invoke(animal, EncounterOutcome.Befriended);
     }
 
+    private void CheckMidpointTragedyTrigger()
+    {
+        if (HasTriggeredMidpointTragedy) return;
+
+        int resolvedMainAnimals = 0;
+        foreach (var kvp in animalStates)
+        {
+            if (kvp.Key == AnimalType.Rooster || kvp.Key == AnimalType.Eagle) continue;
+            if (kvp.Value != EncounterOutcome.Unvisited)
+                resolvedMainAnimals++;
+        }
+
+        if (resolvedMainAnimals >= mainEncountersBeforeTragedy)
+        {
+            TriggerMidpointTragedy();
+        }
+    }
+
+    public void TriggerMidpointTragedy()
+    {
+        if (HasTriggeredMidpointTragedy) return;
+
+        HasTriggeredMidpointTragedy = true;
+        IsHeartbroken = true;
+
+        savedPrideBeforeHeartbreak = Mathf.Max(0, CurrentPride);
+        savedAbilitiesBeforeHeartbreak = new HashSet<AnimalType>(unlockedAbilities);
+
+        CurrentPride = -1;
+        unlockedAbilities.Clear();
+    }
+
+    public void CompleteRoosterTraining()
+    {
+        if (!IsHeartbroken) return;
+
+        IsHeartbroken = false;
+        CurrentPride = savedPrideBeforeHeartbreak;
+        unlockedAbilities = new HashSet<AnimalType>(savedAbilitiesBeforeHeartbreak);
+
+        OnStatsChanged?.Invoke();
+    }
+
     public void ResolvePlayerLostBattle(AnimalType animal)
     {
-        // First tutorial fight: treat loss as getting kicked out into Madam Henriette's route
         if (animal == AnimalType.Rooster)
         {
             animalStates[animal] = EncounterOutcome.Befriended;
@@ -196,6 +261,7 @@ public class StoryManager : MonoBehaviour
 
     public PrideTier GetPrideTier()
     {
+        if (IsHeartbroken || CurrentPride < 0) return PrideTier.Heartbroken;
         if (CurrentPride <= 1) return PrideTier.Low;
         if (CurrentPride <= 3) return PrideTier.Medium;
         return PrideTier.High;
@@ -264,7 +330,6 @@ public class StoryManager : MonoBehaviour
         var angerReasons = new List<string>();
         var happyReasons = new List<string>();
 
-        // 1. Evaluate Friends
         for (int i = 0; i < net.friends.Count; i++)
         {
             AnimalRelationLink link = net.friends[i];
@@ -291,7 +356,6 @@ public class StoryManager : MonoBehaviour
             }
         }
 
-        // 2. Evaluate Enemies
         for (int i = 0; i < net.enemies.Count; i++)
         {
             AnimalRelationLink link = net.enemies[i];
@@ -320,7 +384,6 @@ public class StoryManager : MonoBehaviour
 
         mods.sentimentScore = score;
 
-        // Even if net score cancels to 0 (e.g., +1 and -1), still play the specific dialogue lines if any occurred
         if (gatheredDialogue.Count > 0)
         {
             mods.hasActiveRule = true;

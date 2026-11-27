@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
 public class AnimalInteractable : MonoBehaviour
@@ -6,6 +7,8 @@ public class AnimalInteractable : MonoBehaviour
     [Header("Identity")]
     [Tooltip("Enable for townsfolk/bystanders who never fight and don't map to a combatant's StoryManager state")]
     [SerializeField] private bool isNeutralNPC = false;
+    [Tooltip("Enable on Madame Henriette so she becomes a memorial after the midgame Eagle attack")]
+    [SerializeField] private bool isMadameHenriette = false;
     [SerializeField] private AnimalType animalType = AnimalType.Pig;
     [SerializeField] private string speakerName = "Truff";
 
@@ -14,7 +17,7 @@ public class AnimalInteractable : MonoBehaviour
     [SerializeField] private Sprite normalAnimalSprite;
     [SerializeField] private Sprite gravestoneSprite;
     [SerializeField] private string gravestoneSpeakerName = "Gravestone";
-    [SerializeField] private bool disableColliderWhenDefeated = false; // Keep false if you want players to inspect the gravestone
+    [SerializeField] private bool disableColliderWhenDefeated = false;
 
     [Header("Pre-Encounter / Neutral Dialogue by Pride Tier")]
     [Tooltip("Pride 0-1 (Humble) — also used as default dialogue for Neutral NPCs")]
@@ -40,6 +43,23 @@ public class AnimalInteractable : MonoBehaviour
         "*Backs away nervously* Look at the size of you... Everyone's talking about what you did.",
         "Stay back—I won't go down without a fight!"
     };
+
+    [Header("Midgame Heartbreak Dialogue")]
+    [TextArea(2, 4)]
+    [SerializeField] private string[] roosterHeartbrokenLines = new[]
+    {
+        "Chin up, kid! Wingston may have taken Madame Henriette, but he hasn't broken your spirit.",
+        "Focus on my crow and steady your heart—let's train until your strength comes back!"
+    };
+
+    [TextArea(2, 4)]
+    [SerializeField] private string[] heartbrokenRefuseFightLines = new[]
+    {
+        "...You look completely broken right now. I'm not fighting you like this—go talk to the Rooster."
+    };
+
+    [Tooltip("Hook your Rooster Rhythm Training Minigame starter here")]
+    public UnityEvent onStartRoosterTraining;
 
     [Header("Post-Encounter Dialogue (Combatants Only)")]
     [TextArea(2, 4)]
@@ -76,8 +96,11 @@ public class AnimalInteractable : MonoBehaviour
 
     private void OnEnable()
     {
-        if (!isNeutralNPC && StoryManager.Instance != null)
+        if (StoryManager.Instance != null)
+        {
             StoryManager.Instance.OnAnimalResolved += HandleAnimalResolved;
+            StoryManager.Instance.OnStatsChanged += RefreshVisualState;
+        }
     }
 
     private void Start()
@@ -88,17 +111,33 @@ public class AnimalInteractable : MonoBehaviour
     private void OnDisable()
     {
         if (StoryManager.Instance != null)
+        {
             StoryManager.Instance.OnAnimalResolved -= HandleAnimalResolved;
+            StoryManager.Instance.OnStatsChanged -= RefreshVisualState;
+        }
     }
 
     private void HandleAnimalResolved(AnimalType resolvedAnimal, EncounterOutcome outcome)
     {
-        if (!isNeutralNPC && resolvedAnimal == animalType)
+        if ((!isNeutralNPC && resolvedAnimal == animalType) || isMadameHenriette)
             RefreshVisualState();
     }
 
     public void RefreshVisualState()
     {
+        if (isMadameHenriette)
+        {
+            bool henrietteFallen = StoryManager.Instance != null && StoryManager.Instance.HasTriggeredMidpointTragedy;
+            if (spriteRenderer != null)
+            {
+                if (henrietteFallen && gravestoneSprite != null)
+                    spriteRenderer.sprite = gravestoneSprite;
+                else if (normalAnimalSprite != null)
+                    spriteRenderer.sprite = normalAnimalSprite;
+            }
+            return;
+        }
+
         if (isNeutralNPC)
         {
             if (spriteRenderer != null && normalAnimalSprite != null)
@@ -140,6 +179,18 @@ public class AnimalInteractable : MonoBehaviour
 
     private void TriggerInteraction()
     {
+        bool isHeartbroken = StoryManager.Instance != null && StoryManager.Instance.IsHeartbroken;
+
+        // 1. Madame Henriette memorial after midgame tragedy
+        if (isMadameHenriette && StoryManager.Instance != null && StoryManager.Instance.HasTriggeredMidpointTragedy)
+        {
+            string memorialSpeaker = !string.IsNullOrWhiteSpace(gravestoneSpeakerName) ? gravestoneSpeakerName : speakerName;
+            if (dialogueBox != null)
+                dialogueBox.StartDialogue(memorialSpeaker, gravestoneLines);
+            return;
+        }
+
+        // 2. Neutral NPCs
         if (isNeutralNPC)
         {
             string[] neutralLines = GetPrideScaledDialogue();
@@ -148,11 +199,37 @@ public class AnimalInteractable : MonoBehaviour
             return;
         }
 
+        // 3. Rooster training trigger while heartbroken
+        if (isHeartbroken && animalType == AnimalType.Rooster)
+        {
+            if (dialogueBox != null)
+            {
+                dialogueBox.StartDialogue(speakerName, roosterHeartbrokenLines, onComplete: () =>
+                {
+                    onStartRoosterTraining?.Invoke();
+                });
+            }
+            else
+            {
+                onStartRoosterTraining?.Invoke();
+            }
+            return;
+        }
+
         EncounterOutcome outcome = StoryManager.Instance != null
             ? StoryManager.Instance.GetAnimalState(animalType)
             : EncounterOutcome.Unvisited;
 
         bool alreadyResolved = outcome != EncounterOutcome.Unvisited;
+
+        // 4. Other unvisited combatants refuse to fight until you train with the Rooster
+        if (isHeartbroken && !alreadyResolved)
+        {
+            if (dialogueBox != null)
+                dialogueBox.StartDialogue(speakerName, heartbrokenRefuseFightLines);
+            return;
+        }
+
         string[] linesToPlay = GetDialogueForCurrentState(outcome);
         string activeSpeaker = (outcome == EncounterOutcome.Defeated && !string.IsNullOrWhiteSpace(gravestoneSpeakerName))
             ? gravestoneSpeakerName
@@ -180,7 +257,6 @@ public class AnimalInteractable : MonoBehaviour
         if (outcome == EncounterOutcome.Defeated)
             return gravestoneLines;
 
-        // Check if a counterpart relationship rule overrides pre-encounter dialogue (e.g., Cow reacting to Sheep)
         if (StoryManager.Instance != null)
         {
             BattleRelationshipModifiers relMods = StoryManager.Instance.GetBattleModifiersFor(animalType);

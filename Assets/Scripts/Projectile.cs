@@ -154,8 +154,12 @@ public class Projectile : MonoBehaviour
         if (maxDistanceFromCenter > 0f)
         {
             Vector2 offset = (Vector2)transform.position - arenaCenter;
-            bool insideBox = Mathf.Abs(offset.x) <= maxDistanceFromCenter
-                          && Mathf.Abs(offset.y) <= maxDistanceFromCenter;
+            float exitLimit = (movementType == ProjectileMovementType.Boomerang && !boomerangReversed)
+                ? maxDistanceFromCenter + 1.5f
+                : maxDistanceFromCenter;
+
+            bool insideBox = Mathf.Abs(offset.x) <= exitLimit
+                          && Mathf.Abs(offset.y) <= exitLimit;
 
             if (insideBox)
             {

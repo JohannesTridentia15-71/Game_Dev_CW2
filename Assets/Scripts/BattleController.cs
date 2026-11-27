@@ -76,6 +76,7 @@ public class BattleController : MonoBehaviour
     private AnimalType currentOpponent;
     private AnimalBattleProfile activeProfile;
     private string opponentLabel;
+    private string baseOpponentName;
 
     private void Start()
     {
@@ -103,6 +104,8 @@ public class BattleController : MonoBehaviour
                 break;
             }
         }
+
+        baseOpponentName = opponentLabel;
 
         // Apply any active relationship rules (e.g., Cow enraged if Sheep was defeated)
         BattleRelationshipModifiers relMods = StoryManager.Instance != null
@@ -192,7 +195,8 @@ public class BattleController : MonoBehaviour
             abilityManager.TickAbilities(inCombatRound);
 
         // 1. Respect Points (RP) increase while dodging (doubled during Truffle Charm)
-        float rpMultiplier = abilityManager != null ? abilityManager.TruffleCharmRPMultiplier : 1f;
+        float rpMultiplier = (abilityManager != null ? abilityManager.TruffleCharmRPMultiplier : 1f)
+            * (StoryManager.Instance != null ? StoryManager.Instance.ActiveRPMultiplier : 1f);
         currentEnemyRP = Mathf.Min(maxEnemyRP, currentEnemyRP + rpGainPerSecond * rpMultiplier * Time.deltaTime);
         UpdateMeters();
 
@@ -285,11 +289,11 @@ public class BattleController : MonoBehaviour
 
         float damageMult = abilityManager != null ? abilityManager.ConsumePeckDamageMultiplier() : 1f;
         float cooldownMult = abilityManager != null ? abilityManager.PackFrenzyCooldownMultiplier : 1f;
-        int pride = StoryManager.Instance != null ? StoryManager.Instance.CurrentPride : 0;
+        int pride = StoryManager.Instance != null ? Mathf.Max(0, StoryManager.Instance.CurrentPride) : 0;
         float prideDamageMult = 1f + (pride * peckDamageBonusPerPride);
+        float storyAttackMult = StoryManager.Instance != null ? StoryManager.Instance.ActiveAttackMultiplier : 1f;
 
-        // Attacking lowers HP, but also lowers Respect (RP)
-        currentEnemyHP = Mathf.Max(0f, currentEnemyHP - peckHPDamage * damageMult * prideDamageMult);
+        currentEnemyHP = Mathf.Max(0f, currentEnemyHP - peckHPDamage * damageMult * prideDamageMult * storyAttackMult);
         currentEnemyRP = Mathf.Max(0f, currentEnemyRP - peckRPPenalty);
         peckTimer = activePeckCooldown * cooldownMult;
         UpdateMeters();
@@ -386,6 +390,15 @@ public class BattleController : MonoBehaviour
 
     private string[] BuildPostFightReflection(AnimalType animal, EncounterOutcome outcome)
     {
+        if (StoryManager.Instance != null && StoryManager.Instance.IsHeartbroken)
+        {
+            return new[]
+            {
+                "A piercing screech echoes across the farm... Wingston Churchill swooped down on Madame Henriette!",
+                "Grief crushes your chest. Your abilities fade and your steps feel heavy—go back to the Rooster!"
+            };
+        }
+
         if (outcome == EncounterOutcome.Defeated)
         {
             PrideTier tier = StoryManager.Instance != null
@@ -421,7 +434,7 @@ public class BattleController : MonoBehaviour
 
         return new[]
         {
-            $"{opponentLabel} stands by you now. Your steps stay light and nimble, and you gained {abilityName}!"
+            $"{baseOpponentName} stands by you now. Your steps stay light and nimble, and you gained {abilityName}!"
         };
     }
 

@@ -4626,7 +4626,7 @@ MonoBehaviour:
   battleController: {fileID: 1485084590}
   eggMovement: {fileID: 792714792}
   eggHealth: {fileID: 792714794}
-  unlockAllForTesting: 1
+  unlockAllForTesting: 0
   woolBarrierVisual: {fileID: 0}
   woolBarrierDuration: 3.5
   woolBarrierMaxCharges: 2
@@ -6662,7 +6662,7 @@ MonoBehaviour:
     battleSprite: {fileID: 1315129547176965255, guid: 9be1d7b346ece60469560798934fbebe, type: 3}
     maxHP: 150
     maxRP: 120
-    rpGainPerSecond: 1
+    rpGainPerSecond: 3
     peckCooldown: 4
     unlockedAbilityName: 
     abilityHotkeyLabel: 
@@ -6680,10 +6680,10 @@ MonoBehaviour:
   - animal: 6
     displayName: Wingston Churchill
     battleSprite: {fileID: 1315129547176965255, guid: 9be1d7b346ece60469560798934fbebe, type: 3}
-    maxHP: 100
-    maxRP: 100
-    rpGainPerSecond: 1
-    peckCooldown: 2
+    maxHP: 200
+    maxRP: 200
+    rpGainPerSecond: 4
+    peckCooldown: 5
     unlockedAbilityName: 
     abilityHotkeyLabel: 
     abilityDescription: 
@@ -7364,6 +7364,9 @@ MonoBehaviour:
   startingLives: 4
   maxLives: 5
   maxPride: 5
+  mainEncountersBeforeTragedy: 3
+  heartbrokenAttackMultiplier: 0.5
+  heartbrokenRPMultiplier: 0.5
   defaultOpponent: 0
   socialNetworks: []
   hostileHpStep: 0.12

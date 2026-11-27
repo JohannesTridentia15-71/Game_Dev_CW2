@@ -27,19 +27,23 @@ public class DialogueBox : MonoBehaviour
     private Coroutine typingCoroutine;
     private string currentFullLine;
     private bool isTyping;
+    private bool openedThisFrame;
     private Action onDialogueFinished;
 
     public bool IsOpen => boxRoot != null && boxRoot.activeSelf;
 
     private void Awake()
     {
+        if (boxRoot == null && transform.childCount > 0)
+            boxRoot = transform.GetChild(0).gameObject;
+
         if (boxRoot != null)
             boxRoot.SetActive(false);
     }
 
     private void Update()
     {
-        if (!IsOpen) return;
+        if (!IsOpen || openedThisFrame) return;
 
         bool advancePressed = Input.GetKeyDown(advanceKey)
             || Input.GetKeyDown(KeyCode.Space)
@@ -55,6 +59,11 @@ public class DialogueBox : MonoBehaviour
         }
     }
 
+    private void LateUpdate()
+    {
+        openedThisFrame = false;
+    }
+
     /// <summary>
     /// Starts a multi-line conversation with speaker names.
     /// </summary>
@@ -65,6 +74,7 @@ public class DialogueBox : MonoBehaviour
             lineQueue.Enqueue(line);
 
         onDialogueFinished = onComplete;
+        openedThisFrame = true;
 
         if (boxRoot != null)
             boxRoot.SetActive(true);
@@ -115,10 +125,11 @@ public class DialogueBox : MonoBehaviour
             continueIndicator.SetActive(false);
 
         bodyText.text = line;
+        bodyText.ForceMeshUpdate();
         bodyText.maxVisibleCharacters = 0;
 
         float delay = charactersPerSecond > 0f ? 1f / charactersPerSecond : 0f;
-        int totalChars = line.Length;
+        int totalChars = bodyText.textInfo.characterCount;
 
         for (int i = 1; i <= totalChars; i++)
         {

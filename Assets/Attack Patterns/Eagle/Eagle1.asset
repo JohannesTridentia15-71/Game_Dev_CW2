@@ -21,6 +21,6 @@ MonoBehaviour:
   angleParameter: 45
   safeGapWidth: 1.35
   movementType: 5
-  behaviorParamA: 0
+  behaviorParamA: 7.5
   behaviorParamB: 0
   telegraphDuration: 0.6

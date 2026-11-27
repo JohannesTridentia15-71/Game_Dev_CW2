@@ -9,6 +9,7 @@ public class ChickenMovement : MonoBehaviour
     [SerializeField] private float scaleIncreasePerPride = 0.12f; // At 5 Pride -> 1.6x size
     [SerializeField] private float speedPenaltyPerPride = 0.08f;  // At 5 Pride -> 0.6x speed
     [SerializeField] private float minSpeedMultiplier = 0.45f;
+    [SerializeField] private float heartbrokenSpeedMultiplier = 0.72f; // Sluggish when heartbroken (-1 Pride)
 
     [Header("References")]
     [SerializeField] private SpriteRenderer spriteRenderer;
@@ -70,6 +71,13 @@ public class ChickenMovement : MonoBehaviour
     public void ApplyPrideScaling()
     {
         int pride = StoryManager.Instance != null ? StoryManager.Instance.CurrentPride : 0;
+
+        if (pride < 0)
+        {
+            transform.localScale = baseScale;
+            moveSpeed = baseMoveSpeed * heartbrokenSpeedMultiplier;
+            return;
+        }
 
         float scaleMult = 1f + (pride * scaleIncreasePerPride);
         transform.localScale = baseScale * scaleMult;

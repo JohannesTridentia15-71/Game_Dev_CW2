@@ -74,7 +74,7 @@ public class EggHealth : MonoBehaviour
 
     public void ApplyPrideMaxHP(bool refillToFull)
     {
-        int pride = StoryManager.Instance != null ? StoryManager.Instance.CurrentPride : 0;
+        int pride = StoryManager.Instance != null ? Mathf.Max(0, StoryManager.Instance.CurrentPride) : 0;
         float previousMax = maxHP;
         maxHP = baseMaxHP + (pride * bonusMaxHPPerPride);
 
